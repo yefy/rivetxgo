@@ -60,6 +60,16 @@ func GoTypeToSql(t reflect.Type, tagSize string) (string, error) {
 		}
 	case reflect.Bool:
 		return "TINYINT(1)", nil
+	case reflect.Struct:
+		if strings.Contains(t.String(), "Time") {
+			size, err := strconv.Atoi(tagSize)
+			if err != nil || len(tagSize) <= 0 {
+				return "DATETIME", nil
+			} else {
+				return fmt.Sprintf("DATETIME(%d)", size), nil
+			}
+		}
+		return "", fmt.Errorf("unsupported struct type: %s", t.String())
 	default:
 		return "", ee.New(nil, "typ err")
 	}
@@ -69,6 +79,7 @@ type structMeta struct {
 	cols       []string
 	fieldIndex []int
 	sqlTypes   []string
+	fixedAttr  []string
 
 	discardAutoCols       []string
 	discardAutoFieldIndex []int
@@ -130,6 +141,7 @@ func getStructMeta(t reflect.Type) (*structMeta, error) {
 		tagAttr := field.Tag.Get("attr")
 		tagAttr = rivetxcore.StringTrim(tagAttr)
 		isAuto := false
+		fixedAttr := ""
 		if len(tagAttr) > 0 {
 			attrs := strings.Split(tagAttr, ",")
 			for _, attr := range attrs {
@@ -144,19 +156,27 @@ func getStructMeta(t reflect.Type) (*structMeta, error) {
 					meta.primary = tag
 				} else {
 					subAttrs := strings.Split(attr, ":")
-					if len(subAttrs) != 2 {
-						return nil, ee.New(nil, "tagAttr:%v", tagAttr)
-					}
-					if subAttrs[0] == "index" {
-						meta.indexMap[subAttrs[1]] = tag
-					} else if subAttrs[0] == "unique" {
-						meta.uniqueMap[subAttrs[1]] = append(meta.uniqueMap[subAttrs[1]], tag)
+					if len(subAttrs) == 1 {
+						fixedAttr = subAttrs[0]
 					} else {
-						return nil, ee.New(nil, "tagAttr:%v", tagAttr)
+						if len(subAttrs) != 2 {
+							return nil, ee.New(nil, "tagAttr:%v", tagAttr)
+						}
+						if subAttrs[0] == "index" {
+							meta.indexMap[subAttrs[1]] = tag
+						} else if subAttrs[0] == "unique" {
+							meta.uniqueMap[subAttrs[1]] = append(meta.uniqueMap[subAttrs[1]], tag)
+						} else {
+							return nil, ee.New(nil, "tagAttr:%v", tagAttr)
+						}
 					}
 				}
 			}
+		}
 
+		meta.fixedAttr = append(meta.fixedAttr, fixedAttr)
+		if strings.Contains(fixedAttr, "DEFAULT") && strings.Contains(fixedAttr, "CURRENT_TIMESTAMP") {
+			isAuto = true
 		}
 
 		if !isAuto {

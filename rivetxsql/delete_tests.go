@@ -51,16 +51,16 @@ func TestBatchDeletePerGroup() error {
 
 	// 插入数据
 	testData := []TestData{
-		{0, 0, "abc", 1, 1001},
-		{0, 1, "abc", 2, 1002},
-		{0, 2, "abc", 3, 1003},
-		{0, 3, "xyz", 4, 1004},
-		{0, 4, "xyz", 5, 1005},
-		{0, 5, "xyz", 6, 1006},
-		{0, 6, "xyz", 7, 1007},
-		{0, 7, "xyz", 8, 1008},
-		{0, 8, "xyz", 9, 1009},
-		{0, 9, "xyz", 10, 1010},
+		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 2, "abc", 3, 1003, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 3, "xyz", 4, 1004, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 4, "xyz", 5, 1005, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 5, "xyz", 6, 1006, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 6, "xyz", 7, 1007, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 7, "xyz", 8, 1008, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 8, "xyz", 9, 1009, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {
@@ -126,16 +126,16 @@ func TestBatchDeletePerGroupStruct() error {
 
 	// 插入数据
 	testData := []TestData{
-		{0, 0, "abc", 1, 1001},
-		{0, 1, "abc", 2, 1002},
-		{0, 2, "abc", 3, 1003},
-		{0, 3, "xyz", 4, 1004},
-		{0, 4, "xyz", 5, 1005},
-		{0, 5, "xyz", 6, 1006},
-		{0, 6, "xyz", 7, 1007},
-		{0, 7, "xyz", 8, 1008},
-		{0, 8, "xyz", 9, 1009},
-		{0, 9, "xyz", 10, 1010},
+		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 2, "abc", 3, 1003, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 3, "xyz", 4, 1004, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 4, "xyz", 5, 1005, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 5, "xyz", 6, 1006, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 6, "xyz", 7, 1007, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 7, "xyz", 8, 1008, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 8, "xyz", 9, 1009, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {
@@ -207,16 +207,16 @@ func TestBatchDeletePerGroupStruct2() error {
 
 	// 插入数据
 	testData := []TestData{
-		{0, 0, "abc", 1, 1001},
-		{0, 1, "abc", 2, 1002},
-		{0, 2, "abc", 3, 1003},
-		{0, 3, "xyz", 4, 1004},
-		{0, 4, "xyz", 5, 1005},
-		{0, 5, "xyz", 6, 1006},
-		{0, 6, "xyz", 7, 1007},
-		{0, 7, "xyz", 8, 1008},
-		{0, 8, "xyz", 9, 1009},
-		{0, 9, "xyz", 10, 1010},
+		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 2, "abc", 3, 1003, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 3, "xyz", 4, 1004, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 4, "xyz", 5, 1005, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 5, "xyz", 6, 1006, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 6, "xyz", 7, 1007, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 7, "xyz", 8, 1008, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 8, "xyz", 9, 1009, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {
@@ -290,16 +290,16 @@ func TestBatchDeletePerGroupStruct2Point() error {
 
 	// 插入数据
 	testData := []*TestData{
-		{0, 0, "abc", 1, 1001},
-		{0, 1, "abc", 2, 1002},
-		{0, 2, "abc", 3, 1003},
-		{0, 3, "xyz", 4, 1004},
-		{0, 4, "xyz", 5, 1005},
-		{0, 5, "xyz", 6, 1006},
-		{0, 6, "xyz", 7, 1007},
-		{0, 7, "xyz", 8, 1008},
-		{0, 8, "xyz", 9, 1009},
-		{0, 9, "xyz", 10, 1010},
+		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 2, "abc", 3, 1003, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 3, "xyz", 4, 1004, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 4, "xyz", 5, 1005, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 5, "xyz", 6, 1006, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 6, "xyz", 7, 1007, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 7, "xyz", 8, 1008, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 8, "xyz", 9, 1009, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {
@@ -373,16 +373,16 @@ func TestBatchDeletePerGroupStruct2PointLimit() error {
 
 	// 插入数据
 	testData := []*TestData{
-		{0, 0, "abc", 1, 1001},
-		{0, 1, "abc", 2, 1002},
-		{0, 2, "abc", 3, 1003},
-		{0, 3, "xyz", 4, 1004},
-		{0, 4, "xyz", 5, 1005},
-		{0, 5, "xyz", 6, 1006},
-		{0, 6, "xyz", 7, 1007},
-		{0, 7, "xyz", 8, 1008},
-		{0, 8, "xyz", 9, 1009},
-		{0, 9, "xyz", 10, 1010},
+		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 2, "abc", 3, 1003, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 3, "xyz", 4, 1004, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 4, "xyz", 5, 1005, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 5, "xyz", 6, 1006, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 6, "xyz", 7, 1007, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 7, "xyz", 8, 1008, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 8, "xyz", 9, 1009, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {
@@ -443,16 +443,16 @@ func TestBatchDeletePerGroupStruct2PointReserve() error {
 
 		// 插入数据
 		testData := []*TestData{
-			{0, 0, "abc", 1, 1001},
-			{0, 1, "abc", 2, 1002},
-			{0, 2, "abc", 3, 1003},
-			{0, 3, "xyz", 4, 1004},
-			{0, 4, "xyz", 5, 1005},
-			{0, 5, "xyz", 6, 1006},
-			{0, 6, "xyz", 7, 1007},
-			{0, 7, "xyz", 8, 1008},
-			{0, 8, "xyz", 9, 1009},
-			{0, 9, "xyz", 10, 1010},
+			{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+			{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+			{0, 2, "abc", 3, 1003, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+			{0, 3, "xyz", 4, 1004, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+			{0, 4, "xyz", 5, 1005, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+			{0, 5, "xyz", 6, 1006, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+			{0, 6, "xyz", 7, 1007, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+			{0, 7, "xyz", 8, 1008, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+			{0, 8, "xyz", 9, 1009, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+			{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 		}
 		_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 		if err != nil {

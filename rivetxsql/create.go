@@ -20,7 +20,11 @@ func Create[T any](rivetxsql *RivetxSql, tableName string, timeout time.Duration
 		if meta.autoColMap[col] {
 			auto = "AUTO_INCREMENT"
 		}
-		query += fmt.Sprintf(" %s %s NOT NULL %s, ", col, meta.sqlTypes[i], auto)
+		fixedAttr := meta.fixedAttr[i]
+		if len(fixedAttr) <= 0 {
+			fixedAttr = "NOT NULL"
+		}
+		query += fmt.Sprintf(" %s %s %s %s, ", col, meta.sqlTypes[i], fixedAttr, auto)
 	}
 	if len(meta.primary) > 0 {
 		query += fmt.Sprintf(" PRIMARY KEY (%s), ", meta.primary)

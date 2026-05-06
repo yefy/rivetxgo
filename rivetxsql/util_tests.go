@@ -5,6 +5,7 @@ import (
 	"github.com/yefy/log4go/ee"
 	"github.com/yefy/log4go/log4"
 	"reflect"
+	"time"
 )
 
 // TINYTEXT
@@ -13,11 +14,14 @@ import (
 // LONGTEXT
 // size:"64" size:"TEXT"
 type TestData struct {
-	Id        uint64 `db:"id" attr:"auto,primary"`
-	Index     int    `db:"index_col"  attr:"unique:u_td_ik,unique:u_td_in"`
-	Key       string `db:"key_col"    attr:"unique:u_td_ik"  size:"64"`
-	NameId    int    `db:"name_id"    attr:"unique:u_td_in"`
-	NameIndex int    `db:"name_index" attr:"index:i_td_name_index"`
+	Id        uint64    `db:"id" attr:"auto,primary"`
+	Index     int       `db:"index_col"  attr:"unique:u_td_ik,unique:u_td_in"`
+	Key       string    `db:"key_col"    attr:"unique:u_td_ik"  size:"64"`
+	NameId    int       `db:"name_id"    attr:"unique:u_td_in"`
+	NameIndex int       `db:"name_index" attr:"index:i_td_name_index"`
+	CurrTime  time.Time `db:"curr_time"`
+	CreatedAt time.Time `db:"created_at" attr:"DEFAULT CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time `db:"updated_at" attr:"DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"`
 }
 
 func (obj TestData) OrderFieldSelectValue() interface{} {
@@ -47,20 +51,28 @@ type TestDataByAs struct {
 }
 
 type Testkey struct {
-	Index int    `db:"index_col"`
-	Key   string `db:"key_col"`
+	Id        uint64    `db:"id" attr:"auto,primary"`
+	Index     int       `db:"index_col"`
+	Key       string    `db:"key_col"`
+	CreatedAt time.Time `db:"created_at" attr:"DEFAULT CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time `db:"updated_at" attr:"DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"`
 }
 
 func testOpenRivetxSql() (*RivetxSql, error) {
 	config := &Config{
-		//Url       : "root:Yfygz@389@tcp(192.168.80.139:3306)/test_db?charset=utf8mb4&parseTime=True&loc=Local",
-		Url:             "root:Yfygz@389@tcp(192.168.192.139:3306)/test_db?charset=utf8mb4&parseTime=True&loc=Local",
+		Url: "root:Yfygz@389@tcp(192.168.80.139:3306)/test_db?charset=utf8mb4&parseTime=True&loc=Local",
+		//Url:             "root:Yfygz@389@tcp(192.168.192.139:3306)/test_db?charset=utf8mb4&parseTime=True&loc=Local",
 		MaxOpenConns:    10,
 		MaxIdleConns:    5,
 		ConnMaxLifetime: 100000,
 		ConnMaxIdleTime: 100000,
 	}
 	return CreateRivetxSql(config)
+}
+
+// 删除表
+func testKeyDropTable(rivetxsql *RivetxSql) {
+	_, _ = rivetxsql.Pool.Exec("DROP TABLE test_key;")
 }
 
 // 创建测试表
@@ -155,7 +167,9 @@ func testDataCountRows(rivetxsql *RivetxSql, tableName string) int {
 
 // 查询表内容
 func TestDataQueryAll(rivetxsql *RivetxSql) ([]TestData, error) {
-	rows, err := rivetxsql.Pool.Query("SELECT id, index_col, key_col, name_id, name_index FROM test_data ORDER BY index_col, key_col")
+	sql := "SELECT id, index_col, key_col, name_id, name_index, curr_time, created_at, updated_at FROM test_data ORDER BY index_col, key_col"
+	log4.Info("sql:%v", sql)
+	rows, err := rivetxsql.Pool.Query(sql)
 	if err != nil {
 		return nil, ee.New(err, "")
 	}
@@ -164,7 +178,7 @@ func TestDataQueryAll(rivetxsql *RivetxSql) ([]TestData, error) {
 	var result []TestData
 	for rows.Next() {
 		var td TestData
-		if err := rows.Scan(&td.Id, &td.Index, &td.Key, &td.NameId, &td.NameIndex); err != nil {
+		if err := rows.Scan(&td.Id, &td.Index, &td.Key, &td.NameId, &td.NameIndex, &td.CurrTime, &td.CreatedAt, &td.UpdatedAt); err != nil {
 			return nil, ee.New(err, "")
 		}
 		result = append(result, td)
@@ -174,7 +188,9 @@ func TestDataQueryAll(rivetxsql *RivetxSql) ([]TestData, error) {
 }
 
 func TestDataQueryAllNoId(rivetxsql *RivetxSql) ([]TestData, error) {
-	rows, err := rivetxsql.Pool.Query("SELECT index_col, key_col, name_id, name_index FROM test_data ORDER BY index_col, key_col")
+	sql := "SELECT index_col, key_col, name_id, name_index, curr_time FROM test_data ORDER BY index_col, key_col"
+	log4.Info("sql:%v", sql)
+	rows, err := rivetxsql.Pool.Query(sql)
 	if err != nil {
 		return nil, ee.New(err, "")
 	}
@@ -183,7 +199,7 @@ func TestDataQueryAllNoId(rivetxsql *RivetxSql) ([]TestData, error) {
 	var result []TestData
 	for rows.Next() {
 		var td TestData
-		if err := rows.Scan(&td.Index, &td.Key, &td.NameId, &td.NameIndex); err != nil {
+		if err := rows.Scan(&td.Index, &td.Key, &td.NameId, &td.NameIndex, &td.CurrTime); err != nil {
 			return nil, ee.New(err, "")
 		}
 		result = append(result, td)
@@ -197,7 +213,9 @@ func TestDataQueryAllById(rivetxsql *RivetxSql, isDesc bool, limit int) ([]TestD
 	if isDesc {
 		order = "DESC"
 	}
-	rows, err := rivetxsql.Pool.Query(fmt.Sprintf("SELECT id, index_col, key_col, name_id, name_index FROM test_data ORDER BY id %v limit %v", order, limit))
+	sql := fmt.Sprintf("SELECT id, index_col, key_col, name_id, name_index, curr_time, created_at, updated_at  FROM test_data ORDER BY id %v limit %v", order, limit)
+	log4.Info("sql:%v", sql)
+	rows, err := rivetxsql.Pool.Query(sql)
 	if err != nil {
 		return nil, ee.New(err, "")
 	}
@@ -206,7 +224,7 @@ func TestDataQueryAllById(rivetxsql *RivetxSql, isDesc bool, limit int) ([]TestD
 	var result []TestData
 	for rows.Next() {
 		var td TestData
-		if err := rows.Scan(&td.Id, &td.Index, &td.Key, &td.NameId, &td.NameIndex); err != nil {
+		if err := rows.Scan(&td.Id, &td.Index, &td.Key, &td.NameId, &td.NameIndex, &td.CurrTime, &td.CreatedAt, &td.UpdatedAt); err != nil {
 			return nil, ee.New(err, "")
 		}
 		result = append(result, td)

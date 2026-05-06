@@ -52,18 +52,18 @@ func TestBatchInsert() error {
 	}
 	testDataTruncateTable(rivetxsql)
 
-	cols := []string{"index_col", "key_col", "name_id", "name_index"}
+	cols := []string{"index_col", "key_col", "name_id", "name_index", "curr_time"}
 	vals := [][]interface{}{
-		{0, "abc", 1, 1001},
-		{1, "abc", 2, 1002},
-		{2, "abc", 3, 1003},
-		{3, "xyz", 4, 1004},
-		{4, "xyz", 5, 1005},
-		{5, "xyz", 6, 1006},
-		{6, "xyz", 7, 1007},
-		{7, "xyz", 8, 1008},
-		{8, "xyz", 9, 1009},
-		{9, "xyz", 10, 1010},
+		{0, "abc", 1, 1001, time.Now().Truncate(time.Second)},
+		{1, "abc", 2, 1002, time.Now().Truncate(time.Second)},
+		{2, "abc", 3, 1003, time.Now().Truncate(time.Second)},
+		{3, "xyz", 4, 1004, time.Now().Truncate(time.Second)},
+		{4, "xyz", 5, 1005, time.Now().Truncate(time.Second)},
+		{5, "xyz", 6, 1006, time.Now().Truncate(time.Second)},
+		{6, "xyz", 7, 1007, time.Now().Truncate(time.Second)},
+		{7, "xyz", 8, 1008, time.Now().Truncate(time.Second)},
+		{8, "xyz", 9, 1009, time.Now().Truncate(time.Second)},
+		{9, "xyz", 10, 1010, time.Now().Truncate(time.Second)},
 	}
 
 	onDuplicate := "name_id = VALUES(name_id), name_index = name_index + VALUES(name_index)"
@@ -79,7 +79,7 @@ func TestBatchInsert() error {
 
 	// 再次插入重复 index_col,key_col，触发 ON DUPLICATE KEY UPDATE
 	valsDup := [][]interface{}{
-		{0, "abc", 11, 11}, // name_id = 11, name_index += 11
+		{0, "abc", 11, 11, time.Now().Truncate(time.Second)}, // name_id = 11, name_index += 11
 	}
 	_, err = InsertRaw(rivetxsql, "test_data", cols, valsDup, 2, onDuplicate, false, 10*time.Second)
 	if err != nil {
@@ -113,16 +113,16 @@ func TestBatchInsertStruct() error {
 	testDataTruncateTable(rivetxsql)
 
 	testData := []TestData{
-		{0, 0, "abc", 1, 1001},
-		{0, 1, "abc", 2, 1002},
-		{0, 2, "abc", 3, 1003},
-		{0, 3, "xyz", 4, 1004},
-		{0, 4, "xyz", 5, 1005},
-		{0, 5, "xyz", 6, 1006},
-		{0, 6, "xyz", 7, 1007},
-		{0, 7, "xyz", 8, 1008},
-		{0, 8, "xyz", 9, 1009},
-		{0, 9, "xyz", 10, 1010},
+		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 2, "abc", 3, 1003, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 3, "xyz", 4, 1004, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 4, "xyz", 5, 1005, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 5, "xyz", 6, 1006, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 6, "xyz", 7, 1007, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 7, "xyz", 8, 1008, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 8, "xyz", 9, 1009, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 	}
 
 	onDuplicate := "name_id = VALUES(name_id), name_index = name_index + VALUES(name_index)"
@@ -138,7 +138,7 @@ func TestBatchInsertStruct() error {
 
 	// 测试重复插入结构体触发 ON DUPLICATE KEY UPDATE
 	dataDup := []TestData{
-		{0, 0, "abc", 11, 11}, // name_id = 11, name_index += 11
+		{0, 0, "abc", 11, 11, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 11, name_index += 11
 	}
 	_, err = Insert(rivetxsql, "test_data", dataDup, 2, onDuplicate, false, 10*time.Second)
 	if err != nil {
@@ -171,18 +171,18 @@ func TestBatchInsert_NoDuplicateUpdate() error {
 	}
 	testDataTruncateTable(rivetxsql)
 
-	cols := []string{"index_col", "key_col", "name_id", "name_index"}
+	cols := []string{"index_col", "key_col", "name_id", "name_index", "curr_time"}
 	vals := [][]interface{}{
-		{0, "abc", 1, 1001},
-		{1, "abc", 2, 1002},
-		{2, "abc", 3, 1003},
-		{3, "xyz", 4, 1004},
-		{4, "xyz", 5, 1005},
-		{5, "xyz", 6, 1006},
-		{6, "xyz", 7, 1007},
-		{7, "xyz", 8, 1008},
-		{8, "xyz", 9, 1009},
-		{9, "xyz", 10, 1010},
+		{0, "abc", 1, 1001, time.Now().Truncate(time.Second)},
+		{1, "abc", 2, 1002, time.Now().Truncate(time.Second)},
+		{2, "abc", 3, 1003, time.Now().Truncate(time.Second)},
+		{3, "xyz", 4, 1004, time.Now().Truncate(time.Second)},
+		{4, "xyz", 5, 1005, time.Now().Truncate(time.Second)},
+		{5, "xyz", 6, 1006, time.Now().Truncate(time.Second)},
+		{6, "xyz", 7, 1007, time.Now().Truncate(time.Second)},
+		{7, "xyz", 8, 1008, time.Now().Truncate(time.Second)},
+		{8, "xyz", 9, 1009, time.Now().Truncate(time.Second)},
+		{9, "xyz", 10, 1010, time.Now().Truncate(time.Second)},
 	}
 
 	onDuplicate := "" // 不传 ON DUPLICATE KEY UPDATE
@@ -216,16 +216,16 @@ func TestBatchInsertStruct_NoDuplicateUpdate() error {
 	testDataTruncateTable(rivetxsql)
 
 	testData := []TestData{
-		{0, 0, "abc", 1, 1001},
-		{0, 1, "abc", 2, 1002},
-		{0, 2, "abc", 3, 1003},
-		{0, 3, "xyz", 4, 1004},
-		{0, 4, "xyz", 5, 1005},
-		{0, 5, "xyz", 6, 1006},
-		{0, 6, "xyz", 7, 1007},
-		{0, 7, "xyz", 8, 1008},
-		{0, 8, "xyz", 9, 1009},
-		{0, 9, "xyz", 10, 1010},
+		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 2, "abc", 3, 1003, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 3, "xyz", 4, 1004, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 4, "xyz", 5, 1005, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 5, "xyz", 6, 1006, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 6, "xyz", 7, 1007, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 7, "xyz", 8, 1008, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 8, "xyz", 9, 1009, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 	}
 
 	onDuplicate := "" // 不传 ON DUPLICATE KEY UPDATE
@@ -259,16 +259,16 @@ func TestBatchNewInsertStruct() error {
 	testDataTruncateTable(rivetxsql)
 
 	testData := []TestData{
-		{0, 0, "abc", 1, 1001},
-		{0, 1, "abc", 2, 1002},
-		{0, 2, "abc", 3, 1003},
-		{0, 3, "xyz", 4, 1004},
-		{0, 4, "xyz", 5, 1005},
-		{0, 5, "xyz", 6, 1006},
-		{0, 6, "xyz", 7, 1007},
-		{0, 7, "xyz", 8, 1008},
-		{0, 8, "xyz", 9, 1009},
-		{0, 9, "xyz", 10, 1010},
+		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 2, "abc", 3, 1003, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 3, "xyz", 4, 1004, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 4, "xyz", 5, 1005, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 5, "xyz", 6, 1006, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 6, "xyz", 7, 1007, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 7, "xyz", 8, 1008, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 8, "xyz", 9, 1009, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 	}
 
 	onDuplicate := "name_id = VALUES(name_id), name_index = name_index + VALUES(name_index)"
@@ -307,7 +307,7 @@ func TestBatchNewInsertStruct() error {
 
 	// 测试重复插入结构体触发 ON DUPLICATE KEY UPDATE
 	dataDup := []TestData{
-		{0, 0, "abc", 11, 11}, // name_id = 11, name_index += 11
+		{0, 0, "abc", 11, 11, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 11, name_index += 11
 	}
 	_, err = Insert(rivetxsql, "test_data", dataDup, 2, onDuplicate, false, 10*time.Second)
 	if err != nil {
@@ -341,16 +341,16 @@ func TestBatchNewInsertStructPoint() error {
 	testDataTruncateTable(rivetxsql)
 
 	testData := []*TestData{
-		{0, 0, "abc", 1, 1001},
-		{0, 1, "abc", 2, 1002},
-		{0, 2, "abc", 3, 1003},
-		{0, 3, "xyz", 4, 1004},
-		{0, 4, "xyz", 5, 1005},
-		{0, 5, "xyz", 6, 1006},
-		{0, 6, "xyz", 7, 1007},
-		{0, 7, "xyz", 8, 1008},
-		{0, 8, "xyz", 9, 1009},
-		{0, 9, "xyz", 10, 1010},
+		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 2, "abc", 3, 1003, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 3, "xyz", 4, 1004, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 4, "xyz", 5, 1005, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 5, "xyz", 6, 1006, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 6, "xyz", 7, 1007, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 7, "xyz", 8, 1008, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 8, "xyz", 9, 1009, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 	}
 
 	onDuplicate := "name_id = VALUES(name_id), name_index = name_index + VALUES(name_index)"
@@ -382,14 +382,17 @@ func TestBatchNewInsertStructPoint() error {
 	}
 
 	for i, row := range rows {
-		if row != *testData[i] {
-			return ee.New(err, "row %d mismatch: got %+v, want %+v", i, row, testData[i])
+		row.CurrTime = row.CurrTime.Truncate(time.Second)
+		want := *testData[i]
+		want.CurrTime = want.CurrTime.Truncate(time.Second)
+		if row != want {
+			return ee.New(err, "row %d mismatch: got %+v, want %+v", i, row, want)
 		}
 	}
 
 	// 测试重复插入结构体触发 ON DUPLICATE KEY UPDATE
 	dataDup := []TestData{
-		{0, 0, "abc", 11, 11}, // name_id = 11, name_index += 11
+		{0, 0, "abc", 11, 11, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 11, name_index += 11
 	}
 	_, err = Insert(rivetxsql, "test_data", dataDup, 2, onDuplicate, false, 10*time.Second)
 	if err != nil {

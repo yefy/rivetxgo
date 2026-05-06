@@ -47,12 +47,12 @@ func TestSelectWithWherePoint() error {
 
 	// 插入测试数据
 	testData := []*TestData{
-		{Index: 1, Key: "hex", NameId: 100, NameIndex: 1000},
-		{Index: 1, Key: "abc", NameId: 101, NameIndex: 1001},
-		{Index: 1, Key: "def", NameId: 102, NameIndex: 1002},
-		{Index: 2, Key: "ghi", NameId: 103, NameIndex: 1003},
-		{Index: 2, Key: "xyz", NameId: 104, NameIndex: 1004},
-		{Index: 2, Key: "kyl", NameId: 105, NameIndex: 1005},
+		{Index: 1, Key: "hex", NameId: 100, NameIndex: 1000, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 1, Key: "abc", NameId: 101, NameIndex: 1001, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 1, Key: "def", NameId: 102, NameIndex: 1002, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 2, Key: "ghi", NameId: 103, NameIndex: 1003, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 2, Key: "xyz", NameId: 104, NameIndex: 1004, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 2, Key: "kyl", NameId: 105, NameIndex: 1005, CurrTime: time.Now().Truncate(time.Second)},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {
@@ -293,12 +293,12 @@ func TestSelectWithWhere() error {
 
 	// 插入测试数据
 	testData := []TestData{
-		{Index: 1, Key: "hex", NameId: 100, NameIndex: 1000},
-		{Index: 1, Key: "abc", NameId: 101, NameIndex: 1001},
-		{Index: 1, Key: "def", NameId: 102, NameIndex: 1002},
-		{Index: 2, Key: "ghi", NameId: 103, NameIndex: 1003},
-		{Index: 2, Key: "xyz", NameId: 104, NameIndex: 1004},
-		{Index: 2, Key: "kyl", NameId: 105, NameIndex: 1005},
+		{Index: 1, Key: "hex", NameId: 100, NameIndex: 1000, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 1, Key: "abc", NameId: 101, NameIndex: 1001, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 1, Key: "def", NameId: 102, NameIndex: 1002, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 2, Key: "ghi", NameId: 103, NameIndex: 1003, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 2, Key: "xyz", NameId: 104, NameIndex: 1004, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 2, Key: "kyl", NameId: 105, NameIndex: 1005, CurrTime: time.Now().Truncate(time.Second)},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {
@@ -415,12 +415,12 @@ func TestSelectWithWhereJoin() error {
 
 	// 插入测试数据
 	testData := []TestData{
-		{Index: 1, Key: "hex", NameId: 100, NameIndex: 1000},
-		{Index: 1, Key: "abc", NameId: 101, NameIndex: 1001},
-		{Index: 1, Key: "def", NameId: 102, NameIndex: 1002},
-		{Index: 2, Key: "ghi", NameId: 103, NameIndex: 1003},
-		{Index: 2, Key: "xyz", NameId: 104, NameIndex: 1004},
-		{Index: 2, Key: "kyl", NameId: 105, NameIndex: 1005},
+		{Index: 1, Key: "hex", NameId: 100, NameIndex: 1000, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 1, Key: "abc", NameId: 101, NameIndex: 1001, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 1, Key: "def", NameId: 102, NameIndex: 1002, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 2, Key: "ghi", NameId: 103, NameIndex: 1003, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 2, Key: "xyz", NameId: 104, NameIndex: 1004, CurrTime: time.Now().Truncate(time.Second)},
+		{Index: 2, Key: "kyl", NameId: 105, NameIndex: 1005, CurrTime: time.Now().Truncate(time.Second)},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {

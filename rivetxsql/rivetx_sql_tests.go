@@ -3,6 +3,7 @@ package rivetxsql
 import (
 	"github.com/yefy/log4go/ee"
 	"github.com/yefy/log4go/log4"
+	"time"
 )
 
 func RivetxSqlTests() error {
@@ -19,22 +20,22 @@ func RivetxSqlTests() error {
 		}{})
 		log4.Info("%v%v%v%v%v|%+v,%+v", "struct {}{} ", "fixedCols:", len(fixedCols), "fixedVals:", len(fixedVals), fixedCols, fixedVals)
 
-		fixedCols, fixedVals, _ = StructFieldsAndValues(TestData{0, 0, "abc", 1, 1000})
+		fixedCols, fixedVals, _ = StructFieldsAndValues(TestData{0, 0, "abc", 1, 1000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}})
 		log4.Info("%v%v%v%v%v|%+v,%+v", "TestData ", "fixedCols:", len(fixedCols), "fixedVals:", len(fixedVals), fixedCols, fixedVals)
 
-		fixedCols, fixedVals, _ = StructFieldsAndValues(TestData{0, 1, "abc", 2, 2000})
+		fixedCols, fixedVals, _ = StructFieldsAndValues(TestData{0, 1, "abc", 2, 2000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}})
 		log4.Info("%v%v%v%v%v|%+v,%+v", "TestData ", "fixedCols:", len(fixedCols), "fixedVals:", len(fixedVals), fixedCols, fixedVals)
 
-		fixedCols, fixedVals, _ = StructFieldsAndValues(&TestData{0, 0, "abc", 1, 1000})
+		fixedCols, fixedVals, _ = StructFieldsAndValues(&TestData{0, 0, "abc", 1, 1000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}})
 		log4.Info("%v%v%v%v%v|%+v,%+v", "&TestData ", "fixedCols:", len(fixedCols), "fixedVals:", len(fixedVals), fixedCols, fixedVals)
 
-		fixedCols, fixedVals, _ = StructFieldsAndValues(&TestData{0, 1, "abc", 2, 2000})
+		fixedCols, fixedVals, _ = StructFieldsAndValues(&TestData{0, 1, "abc", 2, 2000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}})
 		log4.Info("%v%v%v%v%v|%+v,%+v", "&TestData ", "fixedCols:", len(fixedCols), "fixedVals:", len(fixedVals), fixedCols, fixedVals)
 
-		fixedCols, fixedVals, _ = StructFieldsAndValues(TestData{0, 0, "abc", 1, 1000})
+		fixedCols, fixedVals, _ = StructFieldsAndValues(TestData{0, 0, "abc", 1, 1000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}})
 		log4.Info("%v%v%v%v%v|%+v,%+v", "TestData ", "fixedCols:", len(fixedCols), "fixedVals:", len(fixedVals), fixedCols, fixedVals)
 
-		fixedCols, fixedVals, _ = StructFieldsAndValues(TestData{0, 1, "abc", 2, 2000})
+		fixedCols, fixedVals, _ = StructFieldsAndValues(TestData{0, 1, "abc", 2, 2000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}})
 		log4.Info("%v%v%v%v%v|%+v,%+v", "TestData ", "fixedCols:", len(fixedCols), "fixedVals:", len(fixedVals), fixedCols, fixedVals)
 	}
 

@@ -27,5 +27,14 @@ func TestCreateTable() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
+
+	if err := testKeyCreateTable(rivetxsql); err != nil {
+		return ee.New(err, "")
+	}
+	testKeyDropTable(rivetxsql)
+	err = Create[Testkey](rivetxsql, "test_key", 0)
+	if err != nil {
+		return ee.New(err, "")
+	}
 	return nil
 }
