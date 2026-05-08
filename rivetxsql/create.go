@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/yefy/log4go/ee"
 	"github.com/yefy/log4go/log4"
-	"rivetxgo/rivetxcore"
+	"rivetxgo/rivetxcore/utilx"
 	"time"
 )
 
@@ -44,7 +44,7 @@ func Create[T any](rivetxsql *RivetxSql, tableName string, timeout time.Duration
 	for key, value := range meta.indexMap {
 		query += fmt.Sprintf(" INDEX %s ( %s ),", key, value)
 	}
-	query = rivetxcore.StringTrim(query)
+	query = utilx.StringTrim(query)
 	if query[len(query)-1] == ',' {
 		query = query[0 : len(query)-1]
 	}

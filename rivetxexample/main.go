@@ -5,6 +5,7 @@ import (
 	"github.com/yefy/log4go/ee"
 	"github.com/yefy/log4go/log4"
 	"os"
+	"rivetxgo/rivetxexample/examples"
 	"rivetxgo/rivetxsql"
 )
 
@@ -24,9 +25,19 @@ func doMain() error {
 	defer func() {
 		log4.Close(true)
 	}()
+	log4.Info("doMain start")
 	err = rivetxsql.RivetxSqlTests()
 	if err != nil {
 		return ee.New(err, "")
 	}
+	err = examples.LruTests()
+	if err != nil {
+		return ee.New(err, "")
+	}
+	err = examples.SpawnTests()
+	if err != nil {
+		return ee.New(err, "")
+	}
+	log4.Info("doMain end")
 	return nil
 }

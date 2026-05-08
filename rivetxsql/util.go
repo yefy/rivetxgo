@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/yefy/log4go/ee"
 	"reflect"
-	"rivetxgo/rivetxcore"
+	"rivetxgo/rivetxcore/utilx"
 	"strconv"
 	"strings"
 	"sync"
@@ -115,7 +115,7 @@ func getStructMeta(t reflect.Type) (*structMeta, error) {
 		field := t.Field(i)
 
 		tag := field.Tag.Get("db")
-		tag = rivetxcore.StringTrim(tag)
+		tag = utilx.StringTrim(tag)
 
 		if tag == "-" {
 			continue
@@ -139,13 +139,13 @@ func getStructMeta(t reflect.Type) (*structMeta, error) {
 		meta.fieldIndex = append(meta.fieldIndex, i)
 
 		tagAttr := field.Tag.Get("attr")
-		tagAttr = rivetxcore.StringTrim(tagAttr)
+		tagAttr = utilx.StringTrim(tagAttr)
 		isAuto := false
 		fixedAttr := ""
 		if len(tagAttr) > 0 {
 			attrs := strings.Split(tagAttr, ",")
 			for _, attr := range attrs {
-				attr = rivetxcore.StringTrim(attr)
+				attr = utilx.StringTrim(attr)
 				if attr == "auto" {
 					isAuto = true
 					meta.autoColMap[tag] = true
@@ -185,7 +185,7 @@ func getStructMeta(t reflect.Type) (*structMeta, error) {
 		}
 
 		tagSize := field.Tag.Get("size")
-		tagSize = rivetxcore.StringTrim(tagSize)
+		tagSize = utilx.StringTrim(tagSize)
 		sqlType, err := GoTypeToSql(field.Type, tagSize)
 		if err != nil {
 			return nil, ee.New(nil, "")
