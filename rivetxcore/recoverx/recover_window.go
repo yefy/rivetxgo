@@ -25,8 +25,8 @@ func setStdHandle(stdhandle int32, handle syscall.Handle) error {
 }
 
 // RedirectStderr to the file passed in
-func RedirectStderr() (err error) {
-	logFile, err := os.OpenFile("../logs/recover.log", os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0644)
+func RedirectStderr(path string) (err error) {
+	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0644)
 	if err != nil {
 		return
 	}

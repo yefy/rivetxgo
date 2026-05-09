@@ -4,12 +4,21 @@ import (
 	"fmt"
 	"github.com/yefy/log4go/ee"
 	"github.com/yefy/log4go/log4"
+	"math/rand"
 	"os"
+	"rivetxgo/rivetxcore/limitx"
+	"rivetxgo/rivetxcore/recoverx"
+	"rivetxgo/rivetxcore/tcpx"
 	"rivetxgo/rivetxexample/examples"
 	"rivetxgo/rivetxsql"
+	"time"
 )
 
 func main() {
+	defer func() {
+		log4.Close(true)
+	}()
+
 	err := doMain()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "err:%v\n", err)
@@ -18,13 +27,33 @@ func main() {
 }
 
 func doMain() error {
+	defer func() {
+		if r := recover(); r != nil {
+			log4.Recover(r)
+		}
+	}()
+
 	err := log4.InitFile("./conf/log4.yaml")
 	if err != nil {
-		return ee.New(err, "err:log4.InitFile")
+		return ee.New(err, "err:log.InitFile")
 	}
-	defer func() {
-		log4.Close(true)
-	}()
+	examples.LogReopenTests()
+
+	recoverx.RedirectStderr("./logs/recover.log")
+
+	rand.Seed(time.Now().UnixNano())
+
+	err = limitx.SetUlimit(nil)
+	if err != nil {
+		return ee.New(err, "")
+	}
+
+	dir, err := os.Getwd()
+	if err != nil {
+		return ee.New(err, "pwd")
+	}
+	log4.Info("Current working directory:%v", dir)
+
 	log4.Info("doMain start")
 	err = rivetxsql.RivetxSqlTests()
 	if err != nil {
@@ -35,6 +64,10 @@ func doMain() error {
 		return ee.New(err, "")
 	}
 	err = examples.SpawnTests()
+	if err != nil {
+		return ee.New(err, "")
+	}
+	err = tcpx.TcpTests()
 	if err != nil {
 		return ee.New(err, "")
 	}

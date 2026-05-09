@@ -7,6 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/hashicorp/golang-lru/v2 v2.0.7
+	github.com/pkg/errors v0.9.1
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/yefy/log4go v0.0.0-20260127101516-a417d9f215e6
 	golang.org/x/sys v0.41.0
