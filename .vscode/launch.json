@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch rivetxexample",
+            "type": "go",
+            "request": "launch",
+
+            "mode": "debug",
+
+            "program": "${workspaceFolder}/rivetxexample",
+
+            "cwd": "${workspaceFolder}/rivetxexample"
+        }
+    ]
+}

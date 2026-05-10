@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+//go test ./...
 func main() {
 	defer func() {
 		log4.Close(true)
