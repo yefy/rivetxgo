@@ -1,7 +1,6 @@
 package arcswap
 
 import (
-	"sync"
 	"sync/atomic"
 )
 

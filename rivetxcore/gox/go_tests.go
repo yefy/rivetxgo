@@ -1,8 +1,7 @@
-package examples
+package gox
 
 import (
 	"fmt"
-	"rivetxgo/rivetxcore/gox"
 	"rivetxgo/rivetxcore/syncx"
 	"time"
 )
@@ -41,9 +40,9 @@ var UniqSpawnLog = make([]string, 0, 10000000)
 var ListSpawnLog = make([]string, 0, 10000000)
 var TimerSpawnLog = make([]string, 0, 10000000)
 
-func BatchSpawn() {
+func TestBatchSpawn() {
 	name := "test1"
-	gox.BatchSpawn(name, 100, time.Second, func(datas []interface{}) error {
+	BatchSpawn(name, 100, time.Second, func(datas []interface{}) error {
 		if len(datas) <= 0 {
 			return nil
 		}
@@ -60,18 +59,18 @@ func BatchSpawn() {
 	})
 	for i := 0; i < BatchSpawnMax; i++ {
 		waitBatch.Add(1)
-		gox.BatchAdd(name, &Data{N: i, T: time.Now()})
+		BatchAdd(name, &Data{N: i, T: time.Now()})
 	}
-	gox.BatchFlush(name)
-	gox.BatchClose(name)
+	BatchFlush(name)
+	BatchClose(name)
 }
 
-func UniqSpawn() {
+func TestUniqSpawn() {
 	name := "test1"
 	for i := 0; i < UniqSpawnMax; i++ {
 		data := &Data{N: i, T: time.Now()}
 		waitUniq.Add(1)
-		gox.UniqSpawn(name, true, func() error {
+		UniqSpawn(name, true, func() error {
 			defer waitUniq.Done()
 			UniqSpawnNum++
 			log := fmt.Sprintf("UniqSpawn data:%+v, UniqSpawnNum:%v, Nanoseconds:%v\n", data, UniqSpawnNum, time.Since(data.T).Nanoseconds())
@@ -81,9 +80,9 @@ func UniqSpawn() {
 	}
 }
 
-func ListSpawn() {
+func TestListSpawn() {
 	name := "test1"
-	gox.ListSpawn(name, 1000, func(dataI interface{}) error {
+	ListSpawn(name, 1000, func(dataI interface{}) error {
 		if dataI == nil {
 			return nil
 		}
@@ -98,15 +97,15 @@ func ListSpawn() {
 	})
 	for i := 0; i < ListSpawnMax; i++ {
 		waitList.Add(1)
-		gox.ListAdd(name, &Data{N: i, T: time.Now()})
+		ListAdd(name, &Data{N: i, T: time.Now()})
 	}
-	gox.ListClose(name)
+	ListClose(name)
 }
 
-func TimerSpawn() {
+func TestTimerSpawn() {
 	name := "test1"
 	waitTimer.Add(TimerSpawnMax)
-	gox.TimerSpawn(name, true, time.Duration(TimerSpawnSleep)*time.Millisecond, func() (bool, error) {
+	TimerSpawn(name, true, time.Duration(TimerSpawnSleep)*time.Millisecond, func() (bool, error) {
 		defer waitTimer.Done()
 		data := &Data{N: TimerSpawnNum}
 		TimerSpawnNum++
@@ -119,7 +118,7 @@ func TimerSpawn() {
 	})
 }
 
-func SpawnTests() error {
+func GoTests() error {
 	startTime := time.Now()
 	BatchSpawnDiffTime := int64(0)
 	UniqSpawnDiffTime := int64(0)
@@ -127,10 +126,10 @@ func SpawnTests() error {
 	TimerSpawnDiffTime := int64(0)
 	if IsOpenBatch {
 		waitAll.Add(1)
-		gox.Spawn(func(u uint64) error {
+		Spawn(func(u uint64) error {
 			defer waitAll.Done()
 			startTime := time.Now()
-			BatchSpawn()
+			TestBatchSpawn()
 			waitBatch.Wait()
 			endTime := time.Now()
 			BatchSpawnDiffTime = endTime.UnixMilli() - startTime.UnixMilli()
@@ -139,10 +138,10 @@ func SpawnTests() error {
 	}
 	if IsOpenUniq {
 		waitAll.Add(1)
-		gox.Spawn(func(u uint64) error {
+		Spawn(func(u uint64) error {
 			defer waitAll.Done()
 			startTime := time.Now()
-			UniqSpawn()
+			TestUniqSpawn()
 			waitUniq.Wait()
 			endTime := time.Now()
 			UniqSpawnDiffTime = endTime.UnixMilli() - startTime.UnixMilli()
@@ -152,10 +151,10 @@ func SpawnTests() error {
 
 	if IsOpenList {
 		waitAll.Add(1)
-		gox.Spawn(func(u uint64) error {
+		Spawn(func(u uint64) error {
 			defer waitAll.Done()
 			startTime := time.Now()
-			ListSpawn()
+			TestListSpawn()
 			waitList.Wait()
 			endTime := time.Now()
 			ListSpawnDiffTime = endTime.UnixMilli() - startTime.UnixMilli()
@@ -165,10 +164,10 @@ func SpawnTests() error {
 
 	if IsOpenTimer {
 		waitAll.Add(1)
-		gox.Spawn(func(u uint64) error {
+		Spawn(func(u uint64) error {
 			defer waitAll.Done()
 			startTime := time.Now()
-			TimerSpawn()
+			TestTimerSpawn()
 			waitTimer.Wait()
 			endTime := time.Now()
 			TimerSpawnDiffTime = endTime.UnixMilli() - startTime.UnixMilli()

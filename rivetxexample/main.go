@@ -2,19 +2,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/yefy/log4go/ee"
-	"github.com/yefy/log4go/log4"
 	"math/rand"
 	"os"
+	"rivetxgo/rivetxcore/gox"
 	"rivetxgo/rivetxcore/limitx"
 	"rivetxgo/rivetxcore/recoverx"
 	"rivetxgo/rivetxcore/tcpx"
 	"rivetxgo/rivetxexample/examples"
 	"rivetxgo/rivetxsql"
 	"time"
+
+	"github.com/yefy/log4go/ee"
+	"github.com/yefy/log4go/log4"
 )
 
-//go test ./...
+// go test ./...
 func main() {
 	defer func() {
 		log4.Close(true)
@@ -64,7 +66,7 @@ func doMain() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	err = examples.SpawnTests()
+	err = gox.GoTests()
 	if err != nil {
 		return ee.New(err, "")
 	}
