@@ -1,10 +1,11 @@
 package rivetxsql
 
 import (
+	"time"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/yefy/log4go/ee"
 	"github.com/yefy/log4go/log4"
-	"time"
 )
 
 func TestUpdate() error {
@@ -29,6 +30,7 @@ func TestUpdate() error {
 // 测试 Update
 // ----------------------
 func TestBatchUpdateStruct() error {
+	currTime := time.Now().Truncate(time.Second)
 	rivetxsql, err := testOpenRivetxSql()
 	if err != nil {
 		return ee.New(err, "")
@@ -42,9 +44,9 @@ func TestBatchUpdateStruct() error {
 
 	// 插入初始数据
 	testData := []TestData{
-		{0, 0, "abc", 1, 1000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 1, "xyz", 2, 2000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 2, "def", 3, 3000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 0, "abc", 1, 1000, currTime, time.Time{}, time.Time{}},
+		{0, 1, "xyz", 2, 2000, currTime, time.Time{}, time.Time{}},
+		{0, 2, "def", 3, 3000, currTime, time.Time{}, time.Time{}},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {
@@ -53,9 +55,9 @@ func TestBatchUpdateStruct() error {
 
 	// 准备更新数据
 	updates := []TestData{
-		{0, 0, "abc", 10, 10, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 10, name_index += 10
-		{0, 1, "xyz", 20, 20, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 20, name_index += 20
-		{0, 2, "def", 30, 30, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 30, name_index += 30
+		{0, 0, "abc", 10, 10, currTime, time.Time{}, time.Time{}}, // name_id = 10, name_index += 10
+		{0, 1, "xyz", 20, 20, currTime, time.Time{}, time.Time{}}, // name_id = 20, name_index += 20
+		{0, 2, "def", 30, 30, currTime, time.Time{}, time.Time{}}, // name_id = 30, name_index += 30
 	}
 
 	joinOn := []string{"index_col", "key_col"}
@@ -74,9 +76,9 @@ func TestBatchUpdateStruct() error {
 	}
 
 	expected := []TestData{
-		{0, 0, "abc", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 1, "xyz", 20, 2020, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 2, "def", 30, 3030, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 0, "abc", 10, 1010, currTime, time.Time{}, time.Time{}},
+		{0, 1, "xyz", 20, 2020, currTime, time.Time{}, time.Time{}},
+		{0, 2, "def", 30, 3030, currTime, time.Time{}, time.Time{}},
 	}
 
 	if len(rows) != len(expected) {
@@ -94,6 +96,7 @@ func TestBatchUpdateStruct() error {
 }
 
 func TestBatchUpdateStruct2() error {
+	currTime := time.Now().Truncate(time.Second)
 	rivetxsql, err := testOpenRivetxSql()
 	if err != nil {
 		return ee.New(err, "")
@@ -107,9 +110,9 @@ func TestBatchUpdateStruct2() error {
 
 	// 插入初始数据
 	testData := []TestData{
-		{0, 0, "abc", 1, 1000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 1, "xyz", 2, 2000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 2, "def", 3, 3000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 0, "abc", 1, 1000, currTime, time.Time{}, time.Time{}},
+		{0, 1, "xyz", 2, 2000, currTime, time.Time{}, time.Time{}},
+		{0, 2, "def", 3, 3000, currTime, time.Time{}, time.Time{}},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {
@@ -118,9 +121,9 @@ func TestBatchUpdateStruct2() error {
 
 	// 准备更新数据
 	updates := []TestData{
-		{0, 0, "abc", 10, 10, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 10, name_index += 10
-		{0, 1, "xyz", 20, 20, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 20, name_index += 20
-		{0, 2, "def", 30, 30, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 30, name_index += 30
+		{0, 0, "abc", 10, 10, currTime, time.Time{}, time.Time{}}, // name_id = 10, name_index += 10
+		{0, 1, "xyz", 20, 20, currTime, time.Time{}, time.Time{}}, // name_id = 20, name_index += 20
+		{0, 2, "def", 30, 30, currTime, time.Time{}, time.Time{}}, // name_id = 30, name_index += 30
 	}
 
 	joinOn := []string{"index_col", "key_col"}
@@ -142,9 +145,9 @@ func TestBatchUpdateStruct2() error {
 	}
 
 	expected := []TestData{
-		{0, 0, "abc", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 1, "xyz", 20, 2020, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 2, "def", 30, 3030, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 0, "abc", 10, 1010, currTime, time.Time{}, time.Time{}},
+		{0, 1, "xyz", 20, 2020, currTime, time.Time{}, time.Time{}},
+		{0, 2, "def", 30, 3030, currTime, time.Time{}, time.Time{}},
 	}
 
 	if len(rows) != len(expected) {
@@ -162,6 +165,7 @@ func TestBatchUpdateStruct2() error {
 }
 
 func TestBatchUpdateStruct2Point() error {
+	currTime := time.Now().Truncate(time.Second)
 	rivetxsql, err := testOpenRivetxSql()
 	if err != nil {
 		return ee.New(err, "")
@@ -175,9 +179,9 @@ func TestBatchUpdateStruct2Point() error {
 
 	// 插入初始数据
 	testData := []*TestData{
-		{0, 0, "abc", 1, 1000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 1, "xyz", 2, 2000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 2, "def", 3, 3000, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 0, "abc", 1, 1000, currTime, time.Time{}, time.Time{}},
+		{0, 1, "xyz", 2, 2000, currTime, time.Time{}, time.Time{}},
+		{0, 2, "def", 3, 3000, currTime, time.Time{}, time.Time{}},
 	}
 	_, err = Insert(rivetxsql, "test_data", testData, 2, "", false, 10*time.Second)
 	if err != nil {
@@ -186,9 +190,9 @@ func TestBatchUpdateStruct2Point() error {
 
 	// 准备更新数据
 	updates := []*TestData{
-		{0, 0, "abc", 10, 10, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 10, name_index += 10
-		{0, 1, "xyz", 20, 20, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 20, name_index += 20
-		{0, 2, "def", 30, 30, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 30, name_index += 30
+		{0, 0, "abc", 10, 10, currTime, time.Time{}, time.Time{}}, // name_id = 10, name_index += 10
+		{0, 1, "xyz", 20, 20, currTime, time.Time{}, time.Time{}}, // name_id = 20, name_index += 20
+		{0, 2, "def", 30, 30, currTime, time.Time{}, time.Time{}}, // name_id = 30, name_index += 30
 	}
 
 	joinOn := []string{"index_col", "key_col"}
@@ -210,9 +214,9 @@ func TestBatchUpdateStruct2Point() error {
 	}
 
 	expected := []*TestData{
-		{0, 0, "abc", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 1, "xyz", 20, 2020, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
-		{0, 2, "def", 30, 3030, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
+		{0, 0, "abc", 10, 1010, currTime, time.Time{}, time.Time{}},
+		{0, 1, "xyz", 20, 2020, currTime, time.Time{}, time.Time{}},
+		{0, 2, "def", 30, 3030, currTime, time.Time{}, time.Time{}},
 	}
 
 	if len(rows) != len(expected) {
