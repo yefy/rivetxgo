@@ -10,7 +10,10 @@
 
             "program": "${workspaceFolder}/rivetxexample",
 
-            "cwd": "${workspaceFolder}/rivetxexample"
+            "cwd": "${workspaceFolder}/rivetxexample",
+            "env": {
+                "GOTMPDIR": "C:/Windows/Temp"
+            }
         }
     ]
 }
