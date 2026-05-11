@@ -38,7 +38,7 @@ func (server *Server) NewRouter(isOpenGinLog bool) *gin.Engine {
 	}
 	r.Use(gin.Recovery())
 
-	// 注册 pprof 路由
+	// register pprof routes
 	pprof.Register(r)
 
 	return r

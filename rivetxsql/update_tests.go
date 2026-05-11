@@ -27,7 +27,7 @@ func TestUpdate() error {
 }
 
 // ----------------------
-// 测试 Update
+// test Update
 // ----------------------
 func TestBatchUpdateStruct() error {
 	currTime := time.Now().Truncate(time.Second)
@@ -42,7 +42,7 @@ func TestBatchUpdateStruct() error {
 	}
 	testDataTruncateTable(rivetxsql)
 
-	// 插入初始数据
+	// insert initial data
 	testData := []TestData{
 		{0, 0, "abc", 1, 1000, currTime, time.Time{}, time.Time{}},
 		{0, 1, "xyz", 2, 2000, currTime, time.Time{}, time.Time{}},
@@ -53,7 +53,7 @@ func TestBatchUpdateStruct() error {
 		return ee.New(err, "")
 	}
 
-	// 准备更新数据
+	// prepare update data
 	updates := []TestData{
 		{0, 0, "abc", 10, 10, currTime, time.Time{}, time.Time{}}, // name_id = 10, name_index += 10
 		{0, 1, "xyz", 20, 20, currTime, time.Time{}, time.Time{}}, // name_id = 20, name_index += 20
@@ -63,13 +63,13 @@ func TestBatchUpdateStruct() error {
 	joinOn := []string{"index_col", "key_col"}
 	setExpr := []string{"u.name_id = v.name_id", "u.name_index = u.name_index + v.name_index"}
 
-	// 执行批量更新
-	_, err = Update(rivetxsql, "test_data", updates, joinOn, setExpr, 2, 0) // 测试分批
+	// execute batch update
+	_, err = Update(rivetxsql, "test_data", updates, joinOn, setExpr, 2, 0) // test batch processing
 	if err != nil {
 		return ee.New(err, "")
 	}
 
-	// 验证结果
+	// verify result
 	rows, err := TestDataQueryAllNoId(rivetxsql)
 	if err != nil {
 		return ee.New(err, "")
@@ -108,7 +108,7 @@ func TestBatchUpdateStruct2() error {
 	}
 	testDataTruncateTable(rivetxsql)
 
-	// 插入初始数据
+	// insert initial data
 	testData := []TestData{
 		{0, 0, "abc", 1, 1000, currTime, time.Time{}, time.Time{}},
 		{0, 1, "xyz", 2, 2000, currTime, time.Time{}, time.Time{}},
@@ -119,7 +119,7 @@ func TestBatchUpdateStruct2() error {
 		return ee.New(err, "")
 	}
 
-	// 准备更新数据
+	// prepare update data
 	updates := []TestData{
 		{0, 0, "abc", 10, 10, currTime, time.Time{}, time.Time{}}, // name_id = 10, name_index += 10
 		{0, 1, "xyz", 20, 20, currTime, time.Time{}, time.Time{}}, // name_id = 20, name_index += 20
@@ -129,7 +129,7 @@ func TestBatchUpdateStruct2() error {
 	joinOn := []string{"index_col", "key_col"}
 	setExpr := []string{"u.name_id = v.name_id", "u.name_index = u.name_index + v.name_index"}
 
-	// 执行批量更新
+	// execute batch update
 	res, err := NewUpdate("test_data", updates).JoinOn(joinOn).SetExpr(setExpr).Exec(rivetxsql)
 	if err != nil {
 		return ee.New(err, "")
@@ -138,7 +138,7 @@ func TestBatchUpdateStruct2() error {
 		return ee.New(err, "res.TotalAffected != int64(len(updates))")
 	}
 
-	// 验证结果
+	// verify result
 	rows, err := TestDataQueryAllNoId(rivetxsql)
 	if err != nil {
 		return ee.New(err, "")
@@ -177,7 +177,7 @@ func TestBatchUpdateStruct2Point() error {
 	}
 	testDataTruncateTable(rivetxsql)
 
-	// 插入初始数据
+	// insert initial data
 	testData := []*TestData{
 		{0, 0, "abc", 1, 1000, currTime, time.Time{}, time.Time{}},
 		{0, 1, "xyz", 2, 2000, currTime, time.Time{}, time.Time{}},
@@ -188,7 +188,7 @@ func TestBatchUpdateStruct2Point() error {
 		return ee.New(err, "")
 	}
 
-	// 准备更新数据
+	// prepare update data
 	updates := []*TestData{
 		{0, 0, "abc", 10, 10, currTime, time.Time{}, time.Time{}}, // name_id = 10, name_index += 10
 		{0, 1, "xyz", 20, 20, currTime, time.Time{}, time.Time{}}, // name_id = 20, name_index += 20
@@ -198,7 +198,7 @@ func TestBatchUpdateStruct2Point() error {
 	joinOn := []string{"index_col", "key_col"}
 	setExpr := []string{"u.name_id = v.name_id", "u.name_index = u.name_index + v.name_index"}
 
-	// 执行批量更新
+	// execute batch update
 	res, err := NewUpdate("test_data", updates).JoinOn(joinOn).SetExpr(setExpr).Exec(rivetxsql)
 	if err != nil {
 		return ee.New(err, "")
@@ -207,7 +207,7 @@ func TestBatchUpdateStruct2Point() error {
 		return ee.New(err, "res.TotalAffected != int64(len(updates))")
 	}
 
-	// 验证结果
+	// verify result
 	rows, err := TestDataQueryAllNoId(rivetxsql)
 	if err != nil {
 		return ee.New(err, "")

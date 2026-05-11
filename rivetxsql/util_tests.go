@@ -70,12 +70,12 @@ func testOpenRivetxSql() (*RivetxSql, error) {
 	return CreateRivetxSql(config)
 }
 
-// 删除表
+// drop table
 func testKeyDropTable(rivetxsql *RivetxSql) {
 	_, _ = rivetxsql.Pool.Exec("DROP TABLE test_key;")
 }
 
-// 创建测试表
+// create test table
 func testKeyCreateTable(rivetxsql *RivetxSql) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS test_key (
@@ -100,7 +100,7 @@ func testKeyClearTable(rivetxsql *RivetxSql) error {
 	return err
 }
 
-// 创建测试表
+// create test table
 func testDataCreateTable(rivetxsql *RivetxSql) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS test_data (
@@ -128,12 +128,12 @@ func testDataClearTable(rivetxsql *RivetxSql) error {
 	return nil
 }
 
-// 清空表
+// truncate table
 func testDataTruncateTable(rivetxsql *RivetxSql) {
 	_, _ = rivetxsql.Pool.Exec("TRUNCATE TABLE test_data;")
 }
 
-// 删除表
+// drop table
 func testDataDropTable(rivetxsql *RivetxSql) {
 	_, _ = rivetxsql.Pool.Exec("DROP TABLE test_data;")
 }
@@ -142,7 +142,7 @@ func testDataDropTable(rivetxsql *RivetxSql) {
 //	TotalCount int `db:"COUNT(*) as total_count"`
 //}
 
-// 查询表行数
+// query table row count
 func testDataCountRows(rivetxsql *RivetxSql, tableName string) int {
 	/*
 		rets, err := NewSelect[TableCount](tableName).Where("1=1", nil).Exec(rivetxsql)
@@ -165,7 +165,7 @@ func testDataCountRows(rivetxsql *RivetxSql, tableName string) int {
 	return count
 }
 
-// 查询表内容
+// query table contents
 func TestDataQueryAll(rivetxsql *RivetxSql) ([]TestData, error) {
 	sql := "SELECT id, index_col, key_col, name_id, name_index, curr_time, created_at, updated_at FROM test_data ORDER BY index_col, key_col"
 	log4.Info("sql:%v", sql)
@@ -260,10 +260,10 @@ func StructFieldsAndValues2(v any) ([]string, []interface{}, error) {
 	for i := 0; i < typ.NumField(); i++ {
 		f := typ.Field(i)
 
-		// 获取db标签
+		// get db tag
 		tag := f.Tag.Get("rivetxsql")
 
-		// 如果标签为空，使用字段名的蛇形命名
+		// if the tag is empty, use the field name in snake_case
 		if tag == "" {
 			if !f.IsExported() {
 				continue
@@ -275,7 +275,7 @@ func StructFieldsAndValues2(v any) ([]string, []interface{}, error) {
 			}
 		}
 
-		// 跳过带有"-"标签的字段
+		// skip fields tagged with '-'
 		if tag == "-" {
 			continue
 		}

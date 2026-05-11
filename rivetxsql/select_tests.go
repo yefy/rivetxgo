@@ -45,7 +45,7 @@ func TestSelectWithWherePoint() error {
 		return ee.New(nil, "testDataCountRows(rivetxsql, \"test_data\") != 0")
 	}
 
-	// 插入测试数据
+	// insert test data
 	testData := []*TestData{
 		{Index: 1, Key: "hex", NameId: 100, NameIndex: 1000, CurrTime: time.Now().Truncate(time.Second)},
 		{Index: 1, Key: "abc", NameId: 101, NameIndex: 1001, CurrTime: time.Now().Truncate(time.Second)},
@@ -76,7 +76,7 @@ func TestSelectWithWherePoint() error {
 			return ee.New(err, "len(res1) != len(testData)")
 		}
 
-		// 验证结果
+		// verify result
 		rows, err := TestDataQueryAll(rivetxsql)
 		if err != nil {
 			return ee.New(err, "")
@@ -213,7 +213,7 @@ func TestSelectWithWherePoint() error {
 
 	{
 		// -----------------------------
-		// 1️⃣ 单表查询，无 IN
+		// 1️⃣ single-table query, no IN
 		// -----------------------------
 		res1, err := SelectRaw[*TestData](rivetxsql, "test_data", "", QueryCond{
 			FixedCols: []string{"index_col"},
@@ -291,7 +291,7 @@ func TestSelectWithWhere() error {
 		return ee.New(err, "")
 	}
 
-	// 插入测试数据
+	// insert test data
 	testData := []TestData{
 		{Index: 1, Key: "hex", NameId: 100, NameIndex: 1000, CurrTime: time.Now().Truncate(time.Second)},
 		{Index: 1, Key: "abc", NameId: 101, NameIndex: 1001, CurrTime: time.Now().Truncate(time.Second)},
@@ -307,7 +307,7 @@ func TestSelectWithWhere() error {
 
 	{
 		// -----------------------------
-		// 1️⃣ 单表查询，无 IN
+		// 1️⃣ single-table query, no IN
 		// -----------------------------
 		res1, err := SelectRaw[*TestData](rivetxsql, "test_data", "", QueryCond{
 			FixedCols: []string{"index_col"},
@@ -322,7 +322,7 @@ func TestSelectWithWhere() error {
 	}
 
 	// -----------------------------
-	// 1️⃣ 单表查询，无 IN
+	// 1️⃣ single-table query, no IN
 	// -----------------------------
 	res1, err := SelectRaw[TestData](rivetxsql, "test_data", "", QueryCond{
 		FixedCols: []string{"index_col"},
@@ -336,7 +336,7 @@ func TestSelectWithWhere() error {
 	}
 
 	// -----------------------------
-	// 2️⃣ 单表查询，固定列 + IN 条件
+	// 2️⃣ single-table query, fixed columns + IN conditions
 	// -----------------------------
 	cond := QueryCond{
 		FixedCols: []string{"index_col"},
@@ -353,7 +353,7 @@ func TestSelectWithWhere() error {
 	}
 
 	// -----------------------------
-	// 3️⃣ 使用结构体条件查询
+	// 3️⃣ query with struct conditions
 	// -----------------------------
 	type Fixed struct {
 		Index int `db:"index_col"`
@@ -375,7 +375,7 @@ func TestSelectWithWhere() error {
 	}
 
 	// -----------------------------
-	// 4️⃣ 验证分页读取
+	// 4️⃣ verify paged reads
 	// -----------------------------
 	res4, err := SelectRaw[TestData](rivetxsql, "test_data", "", QueryCond{}, "1=1", nil, "", 0, 0, 0, 10*time.Second) // batchSize = 2
 	if err != nil {
@@ -413,7 +413,7 @@ func TestSelectWithWhereJoin() error {
 		return ee.New(err, "")
 	}
 
-	// 插入测试数据
+	// insert test data
 	testData := []TestData{
 		{Index: 1, Key: "hex", NameId: 100, NameIndex: 1000, CurrTime: time.Now().Truncate(time.Second)},
 		{Index: 1, Key: "abc", NameId: 101, NameIndex: 1001, CurrTime: time.Now().Truncate(time.Second)},
@@ -427,7 +427,7 @@ func TestSelectWithWhereJoin() error {
 		return ee.New(err, "")
 	}
 
-	// 插入测试数据
+	// insert test data
 	testKey := []Testkey{
 		{Index: 1, Key: "hex"},
 		{Index: 1, Key: "abc"},
@@ -442,7 +442,7 @@ func TestSelectWithWhereJoin() error {
 	}
 
 	// -----------------------------
-	// 1️⃣ 单表查询，无 IN
+	// 1️⃣ single-table query, no IN
 	// -----------------------------
 	join := "JOIN test_key k ON d.index_col = k.index_col AND d.key_col = k.key_col"
 	res1, err := SelectRaw[TestDataByD](rivetxsql, "test_data d", join, QueryCond{
@@ -475,7 +475,7 @@ func TestSelectWithWhereJoin() error {
 	}
 
 	// -----------------------------
-	// 2️⃣ 单表查询，固定列 + IN 条件
+	// 2️⃣ single-table query, fixed columns + IN conditions
 	// -----------------------------
 	cond := QueryCond{
 		FixedCols: []string{"d.index_col"},
@@ -493,7 +493,7 @@ func TestSelectWithWhereJoin() error {
 	log4.Info("res2:%+v", res2)
 
 	// -----------------------------
-	// 3️⃣ 使用结构体条件查询
+	// 3️⃣ query with struct conditions
 	// -----------------------------
 
 	type Fixed struct {
@@ -517,7 +517,7 @@ func TestSelectWithWhereJoin() error {
 	log4.Info("res3:%+v", res3)
 
 	// -----------------------------
-	// 4️⃣ 验证分页读取
+	// 4️⃣ verify paged reads
 	// -----------------------------
 	res4, err := SelectRaw[TestDataByD](rivetxsql, "test_data d", join, QueryCond{}, "1=1", nil, "", 0, 0, 0, 10*time.Second) // batchSize = 2
 	if err != nil {

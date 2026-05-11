@@ -15,23 +15,23 @@ import (
 const BatchSize = 1024
 const Timeout = 15 * time.Second
 
-// QueryCond 支持固定列 + IN 条件
+// QueryCond supports fixed columns and IN conditions
 type QueryCond struct {
-	FixedCols   []string        // 固定列名，可为空
-	FixedVals   []interface{}   // 固定列值，可为空
-	InCols      []string        // IN 子句列名
-	InVals      [][]interface{} // IN 条目
+	FixedCols   []string        // fixed column names, may be empty
+	FixedVals   []interface{}   // fixed column values, may be empty
+	InCols      []string        // IN clause column names
+	InVals      [][]interface{} // IN entries
 	InBatchSize int
 }
 
-// QueryStruct 支持结构体映射
+// QueryStruct supports struct mapping
 type QueryStruct[F any, I any] struct {
-	Fixed  *F  // 固定条件结构体，可为空 struct{}
-	InVals []I // IN 条件结构体
+	Fixed  *F  // fixed condition struct, may be empty struct{}
+	InVals []I // IN condition structs
 }
 
 // -----------------------------
-// 1. 从结构体提取列和值
+// 1. extract columns and values from struct
 // -----------------------------
 
 func GoTypeToSql(t reflect.Type, tagSize string) (string, error) {
@@ -199,7 +199,7 @@ func getStructMeta(t reflect.Type) (*structMeta, error) {
 
 func GetCurrentDBName(rivetxsql *RivetxSql) (string, error) {
 	var dbName string
-	// MySQL 使用 DATABASE() 函数
+	// MySQL uses the DATABASE() function
 	err := rivetxsql.Pool.QueryRow("SELECT DATABASE()").Scan(&dbName)
 	if err != nil {
 		return "", err
@@ -366,7 +366,7 @@ func ToSnakeCase(s string) string {
 	var result []rune
 	for i, r := range s {
 		if i > 0 && unicode.IsUpper(r) {
-			// 前一个字符不是下划线，且当前字符是大写，则添加下划线
+			// add underscore when the previous character is not underscore and the current character is uppercase
 			if i > 0 && result[len(result)-1] != '_' {
 				result = append(result, '_')
 			}
@@ -381,7 +381,7 @@ type EstimateJoin struct {
 	Sep   string
 }
 
-// estimateJoinLen 计算字符串数组 join 后的长度（不创建新字符串）
+// estimateJoinLen computes the length of joined string array without allocating a new string
 func estimateJoinLen(data EstimateJoin) int {
 	parts := data.Parts
 	sep := data.Sep
@@ -413,9 +413,9 @@ func estimateStrLen(strs []string, strs2 []string, joins []EstimateJoin) int {
 	return size
 }
 
-// BuildQuery 构建高性能 DELETE SELECT 语句
+// BuildQuery builds high-performance DELETE/SELECT statements
 func BuildQuery(sqls []string, table string, join string, fixedConds []string, cond string, inCols []string, tuples []string, order string, limit string) string {
-	// 估算长度，避免 strings.Join
+	// estimate length to avoid strings.Join
 	estLen := estimateStrLen(sqls, []string{table, join, cond, limit}, []EstimateJoin{{fixedConds, " AND "}, {inCols, ", "}, {tuples, ","}})
 	estLen += 64
 
@@ -441,7 +441,7 @@ func BuildQuery(sqls []string, table string, join string, fixedConds []string, c
 		}
 	}
 
-	// 写固定条件
+	// write fixed conditions
 	if len(fixedConds) > 0 {
 		writeAnd()
 		for i, c := range fixedConds {
@@ -452,13 +452,13 @@ func BuildQuery(sqls []string, table string, join string, fixedConds []string, c
 		}
 	}
 
-	// 写单一条件
+	// write single condition
 	if len(cond) > 0 {
 		writeAnd()
 		b.WriteString(cond)
 	}
 
-	// 写 IN 条件
+	// write IN condition
 	if len(tuples) > 0 {
 		writeAnd()
 		b.WriteByte('(')

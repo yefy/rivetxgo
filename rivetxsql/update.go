@@ -9,13 +9,13 @@ import (
 	"time"
 )
 
-// UpdateRaw 通用批量更新
+// UpdateRaw generic batch update
 func UpdateRaw(rivetxsql *RivetxSql, table string, cols []string, vals [][]interface{}, joinOn []string, setExpr []string, maxPerBatch int, timeout time.Duration) (*UpdateResult, error) {
 	if len(vals) == 0 || len(cols) == 0 || len(joinOn) == 0 || len(setExpr) == 0 {
 		return nil, ee.New(nil, "len(vals) == 0 || len(cols) == 0 || len(joinOn) == 0 || len(setExpr) == 0")
 	}
 
-	// 验证IN值的列数一致性
+	// verify IN values have consistent column count
 	for i, vals := range vals {
 		if len(vals) != len(cols) {
 			return nil, ee.New(nil, "InVals[%d] length %d does not match InCols length %d", i, len(vals), len(cols))
@@ -43,7 +43,7 @@ func UpdateRaw(rivetxsql *RivetxSql, table string, cols []string, vals [][]inter
 			}
 			chunk := vals[start:end]
 
-			// 构造 VALUES ROW(...)
+			// build VALUES ROW(...)
 			rows := make([]string, 0, len(chunk))
 			args := make([]interface{}, 0, len(chunk)*len(cols))
 			for _, v := range chunk {
@@ -51,13 +51,13 @@ func UpdateRaw(rivetxsql *RivetxSql, table string, cols []string, vals [][]inter
 				args = append(args, v...)
 			}
 
-			// ON 条件
+			// ON conditions
 			onConditions := make([]string, 0, len(joinOn))
 			for _, c := range joinOn {
 				onConditions = append(onConditions, fmt.Sprintf("u.%s = v.%s", c, c))
 			}
 
-			// SET 表达式由外部传入，不做修改
+			// SET expressions are provided externally and not modified
 			query := fmt.Sprintf(` 
 UPDATE %s AS u 
 JOIN (VALUES %s) AS v(%s) 
@@ -98,7 +98,7 @@ SET %s `,
 	return &UpdateResult{TotalAffected, LastInsertId}, nil
 }
 
-// Update 支持结构体数组批量更新
+// Update supports batch updates for struct slices
 func Update[T any](rivetxsql *RivetxSql, table string, vals []T, joinOn []string, setExpr []string, maxPerBatch int, timeout time.Duration) (*UpdateResult, error) {
 	if len(vals) == 0 || len(joinOn) == 0 || len(setExpr) == 0 {
 		return nil, ee.New(nil, "len(vals) == 0 || len(joinOn) == 0 || len(setExpr) == 0")
@@ -107,7 +107,7 @@ func Update[T any](rivetxsql *RivetxSql, table string, vals []T, joinOn []string
 		maxPerBatch = BatchSize
 	}
 
-	// 提取列名和值
+	// extract column names and values
 	cols, err := StructFields[T]()
 	if err != nil {
 		return nil, ee.New(err, "StructFields")
@@ -121,13 +121,13 @@ func Update[T any](rivetxsql *RivetxSql, table string, vals []T, joinOn []string
 		vals2d = append(vals2d, v)
 	}
 
-	// 调用通用 UpdateRaw
+	// call generic UpdateRaw
 	return UpdateRaw(rivetxsql, table, cols, vals2d, joinOn, setExpr, maxPerBatch, timeout)
 }
 
 type UpdateResult struct {
 	TotalAffected int64
-	LastInsertID  int64 // 最后一个 batch 的
+	LastInsertID  int64 // last batch's
 }
 
 type UpdateBuilder[T any] struct {

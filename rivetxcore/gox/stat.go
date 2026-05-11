@@ -74,7 +74,7 @@ func monitorPool() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	// Go 堆和栈
+	// Go heap and stack
 	log4.Info("pool_log Heap: Alloc=%vMB, Sys=%vMB, Idle=%vMB, Inuse=%vMB, Released=%vMB, HeapObjects=%v",
 		m.HeapAlloc/1024/1024,
 		m.HeapSys/1024/1024,
@@ -91,14 +91,14 @@ func monitorPool() {
 		m.MCacheInuse/1024/1024,
 		m.MCacheSys/1024/1024)
 
-	// GC 状态
+	// GC status
 	log4.Info("pool_log GC: NumGC=%v, PauseTotal=%vms, NextGC=%vMB, LastGC=%v",
 		m.NumGC,
 		float64(m.PauseTotalNs)/1e6,
 		m.NextGC/1024/1024,
 		m.LastGC)
 
-	// 基本分配统计
+	// basic allocation stats
 	log4.Info("pool_log Goroutines/Alloc/Mallocs/Frees: Goroutines:%v, Alloc=%vMB, TotalAlloc=%vMB, Mallocs=%v, Frees=%v",
 		runtime.NumGoroutine(),
 		m.Alloc/1024/1024,
@@ -106,7 +106,7 @@ func monitorPool() {
 		m.Mallocs,
 		m.Frees)
 
-	// OS 进程内存
+	// OS process memory
 	memInfo, err := proc.MemoryInfo()
 	if err != nil {
 		log4.Info("Failed to get OS memory info: %v", err)

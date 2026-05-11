@@ -10,7 +10,7 @@ import (
 )
 
 // -----------------------------
-// InsertRaw 支持手动列和值
+// InsertRaw supports explicit columns and values
 // -----------------------------
 func InsertRaw(rivetxsql *RivetxSql, table string, cols []string, vals [][]interface{}, maxPerBatch int,
 	onDuplicateUpdate string, ignoreDuplicate bool, timeout time.Duration) (*InsertResult, error) {
@@ -18,7 +18,7 @@ func InsertRaw(rivetxsql *RivetxSql, table string, cols []string, vals [][]inter
 		return nil, ee.New(nil, "len(vals) == 0 || len(cols) == 0")
 	}
 
-	// 验证IN值的列数一致性
+	// verify IN values have consistent column count
 	for i, vals := range vals {
 		if len(vals) != len(cols) {
 			return nil, ee.New(nil, "InVals[%d] length %d does not match InCols length %d", i, len(vals), len(cols))
@@ -51,7 +51,7 @@ func InsertRaw(rivetxsql *RivetxSql, table string, cols []string, vals [][]inter
 			}
 			chunk := vals[start:end]
 
-			// 构造 (?, ?, ...)
+			// build (?, ?, ...)
 			tuples := make([]string, 0, len(chunk))
 			args := make([]interface{}, 0, len(chunk)*len(cols))
 			for _, v := range chunk {
@@ -96,7 +96,7 @@ func InsertRaw(rivetxsql *RivetxSql, table string, cols []string, vals [][]inter
 }
 
 // -----------------------------
-// Insert 支持结构体
+// Insert supports structs
 // -----------------------------
 func Insert[T any](rivetxsql *RivetxSql, table string, data []T, maxPerBatch int, onDuplicateUpdate string, ignoreDuplicate bool, timeout time.Duration) (*InsertResult, error) {
 	if len(data) == 0 {
@@ -123,7 +123,7 @@ func Insert[T any](rivetxsql *RivetxSql, table string, data []T, maxPerBatch int
 
 type InsertResult struct {
 	TotalAffected int64
-	LastInsertID  int64 // 最后一个 batch 的
+	LastInsertID  int64 // last batch's
 }
 
 type InsertBuilder[T any] struct {

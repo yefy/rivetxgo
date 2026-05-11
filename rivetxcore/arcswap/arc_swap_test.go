@@ -83,7 +83,7 @@ func TestArcSwap_Concurrency(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			for j := 0; j < iterations; j++ {
-				// 模拟并发读写混合
+				// simulate concurrent read/write mix
 				as.Store(&TestConfig{Value: id*iterations + j})
 				_ = as.Load()
 			}

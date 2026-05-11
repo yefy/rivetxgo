@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// DeleteRaw 支持每组独立删除，每组内 IN 条目分批，固定列可选
+// DeleteRaw supports independent batches, chunked IN values per batch, and optional fixed columns
 func DeleteRaw(rivetxsql *RivetxSql, table string, g QueryCond, cond string, condArgs []interface{}, limit int, timeout time.Duration) (*DeleteResult, error) {
 	if timeout == 0 {
 		timeout = Timeout
@@ -23,7 +23,7 @@ func DeleteRaw(rivetxsql *RivetxSql, table string, g QueryCond, cond string, con
 		return nil, ee.New(nil, "fixedCols and fixedVals length mismatch")
 	}
 
-	// 验证IN值的列数一致性
+	// verify IN values have consistent column count
 	for i, vals := range g.InVals {
 		if len(vals) != len(g.InCols) {
 			return nil, ee.New(nil, "InVals[%d] length %d does not match InCols length %d", i, len(vals), len(g.InCols))
@@ -63,7 +63,7 @@ func DeleteRaw(rivetxsql *RivetxSql, table string, g QueryCond, cond string, con
 		err := func() error {
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
-			// 构造 IN ((?, ?), ...)
+			// build IN ((?, ?), ...)
 			chunkSize := len(chunk) + len(condArgs)
 			if chunkSize <= 0 {
 				chunkSize = 1
@@ -121,9 +121,9 @@ func DeleteRaw(rivetxsql *RivetxSql, table string, g QueryCond, cond string, con
 	return &DeleteResult{TotalAffected, LastInsertId}, nil
 }
 
-// Delete 支持结构体解析，封装调用 Delete
+// Delete supports struct parsing and wraps DeleteRaw
 func Delete[F any, I any](rivetxsql *RivetxSql, table string, g QueryStruct[F, I], cond string, condArgs []interface{}, timeout time.Duration) (*DeleteResult, error) {
-	// 固定列和值
+	// fixed columns and values
 	fixedCols, fixedVals, err := StructFieldsAndValues(g.Fixed)
 	if err != nil {
 		return nil, ee.New(err, "StructFieldsAndValues")
@@ -131,7 +131,7 @@ func Delete[F any, I any](rivetxsql *RivetxSql, table string, g QueryStruct[F, I
 
 	inCols := []string{}
 	inVals := make([][]interface{}, 0, len(g.InVals))
-	// IN 列和值
+	// IN columns and values
 	if len(g.InVals) > 0 {
 		inCols, err = StructFields[I]()
 		if err != nil {
@@ -153,13 +153,13 @@ func Delete[F any, I any](rivetxsql *RivetxSql, table string, g QueryStruct[F, I
 		InVals:    inVals,
 	}
 
-	// 调用原始 Delete 执行
+	// invoke raw Delete execution
 	return DeleteRaw(rivetxsql, table, groupDelete, cond, condArgs, 0, timeout)
 }
 
 type DeleteResult struct {
 	TotalAffected int64
-	LastInsertID  int64 // 最后一个 batch 的
+	LastInsertID  int64 // last batch's
 }
 
 type DeleteBuilder struct {

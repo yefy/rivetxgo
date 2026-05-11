@@ -16,7 +16,7 @@ func scanRow[T any](rows *sql.Rows, columns []string) (T, error) {
 	var t T
 	typ := reflect.TypeFor[T]()
 
-	// 1. 确定底层结构体类型
+	// 1. determine the underlying struct type
 	isPtr := false
 	structTyp := typ
 	if typ.Kind() == reflect.Pointer {
@@ -24,26 +24,26 @@ func scanRow[T any](rows *sql.Rows, columns []string) (T, error) {
 		structTyp = typ.Elem()
 	}
 
-	// 校验类型是否为结构体
+	// verify the type is a struct
 	if structTyp.Kind() != reflect.Struct {
 		return t, fmt.Errorf("expected struct, got %v", structTyp.Kind())
 	}
 
-	// 2. 准备实例：无论 T 是什么，我们最终都需要操作结构体实例的 Field
+	// 2. prepare an instance: regardless of T, we ultimately need to manipulate struct fields
 	var val reflect.Value
 	if isPtr {
-		// 如果 T 是 *User，创建一个新的 User 实例
-		// reflect.New 返回的是指向 User 的指针 (*User)
+		// if T is *User, create a new User instance
+		// reflect.New returns a pointer to User (*User)
 		newObjPtr := reflect.New(structTyp)
-		val = newObjPtr.Elem()        // 拿到 User 实例以便操作字段
-		t = newObjPtr.Interface().(T) // 将 *User 赋值给返回变量 t
+		val = newObjPtr.Elem()        // get the User instance to manipulate fields
+		t = newObjPtr.Interface().(T) // assign *User to return variable t
 	} else {
-		// 如果 T 是 User，直接取 t 的地址来操作
-		// 注意这里必须传 &t 的 Value，这样 Elem() 得到的 val 才是 "addressable" 的
+		// if T is User, use &t directly to operate
+		// note: pass the Value of &t so Elem() produces an addressable val
 		val = reflect.ValueOf(&t).Elem()
 	}
 
-	// 3. 获取元数据（包含列名到字段索引的映射）
+	// 3. get metadata (includes column-to-field index mapping)
 	meta, err := getStructMeta(structTyp)
 	if err != nil {
 		return t, err
@@ -53,7 +53,7 @@ func scanRow[T any](rows *sql.Rows, columns []string) (T, error) {
 		return t, ee.New(nil, "len(columns):%v != len(meta.fieldIndex):%v", len(columns), len(meta.fieldIndex))
 	}
 
-	// 为每个列准备扫描目标
+	// prepare scan targets for each column
 	dest := make([]interface{}, len(columns))
 	for i, _ := range columns {
 		idx := meta.fieldIndex[i]
@@ -64,7 +64,7 @@ func scanRow[T any](rows *sql.Rows, columns []string) (T, error) {
 	return t, err
 }
 
-// SelectRaw 支持分页 + 固定列 + IN 条件
+// SelectRaw supports paging, fixed columns, and IN conditions
 func SelectRaw[T any](rivetxsql *RivetxSql, table string, join string, queryCond QueryCond,
 	cond string, condArgs []interface{}, order string, limit int, offset int, batchSize int,
 	timeout time.Duration) ([]T, error) {
@@ -111,7 +111,7 @@ func SelectRaw[T any](rivetxsql *RivetxSql, table string, join string, queryCond
 		}
 	}
 
-	// 验证IN值的列数一致性
+	// verify IN values have consistent column count
 	for i, vals := range queryCond.InVals {
 		if len(vals) != len(queryCond.InCols) {
 			return nil, ee.New(nil, "InVals[%d] length %d does not match InCols length %d", i, len(vals), len(queryCond.InCols))
@@ -159,7 +159,7 @@ func SelectRaw[T any](rivetxsql *RivetxSql, table string, join string, queryCond
 				ctx, cancel := context.WithTimeout(context.Background(), timeout)
 				defer cancel()
 
-				// 构造 IN ((?, ?), ...)
+				// build IN ((?, ?), ...)
 				chunkSize := len(chunk) + len(condArgs)
 				if chunkSize <= 0 {
 					chunkSize = 1
@@ -218,7 +218,7 @@ func SelectRaw[T any](rivetxsql *RivetxSql, table string, join string, queryCond
 						chunkIndex, dataOffset, time.Since(startTime).Milliseconds(), time.Since(execTime).Milliseconds(), query, totalCount, batchCount, 0, args)
 				}
 
-				// 如果本次查询少于 batchSize，说明已经读完这个 chunk
+				// if this query returns fewer than batchSize, the chunk is complete
 				if batchCount < minLimit {
 					return true, nil
 				}
@@ -239,11 +239,11 @@ func SelectRaw[T any](rivetxsql *RivetxSql, table string, join string, queryCond
 	return result, nil
 }
 
-// Select 支持结构体条件 + 分页
+// Select supports struct conditions and paging
 func Select[T any, F any, I any](rivetxsql *RivetxSql, table string, join string, queryStruct QueryStruct[F, I],
 	cond string, condArgs []interface{}, order string, limit int, offset int, batchSize int,
 	timeout time.Duration) ([]T, error) {
-	// 固定列和值
+	// fixed columns and values
 	fixedCols, fixedVals, err := StructFieldsAndValues(queryStruct.Fixed)
 	if err != nil {
 		return nil, ee.New(err, "StructFieldsAndValues")
@@ -251,7 +251,7 @@ func Select[T any, F any, I any](rivetxsql *RivetxSql, table string, join string
 
 	inCols := []string{}
 	inVals := make([][]interface{}, 0, len(queryStruct.InVals))
-	// IN 列和值
+	// IN columns and values
 	if len(queryStruct.InVals) > 0 {
 		inCols, err = StructFields[I]()
 		if err != nil {

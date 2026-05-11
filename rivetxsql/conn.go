@@ -33,13 +33,13 @@ func CreateRivetxSql(config *Config) (*RivetxSql, error) {
 		return nil, ee.New(err, "Error opening database")
 	}
 
-	// 设置连接池参数
-	pool.SetMaxOpenConns(config.MaxOpenConns)                                         // 最大打开连接数
-	pool.SetMaxIdleConns(config.MaxIdleConns)                                         // 最大空闲连接数
-	pool.SetConnMaxLifetime(time.Duration(config.ConnMaxLifetime) * time.Millisecond) // 连接最大生命周期
-	pool.SetConnMaxIdleTime(time.Duration(config.ConnMaxIdleTime) * time.Millisecond) // 最大空闲时间
+	// set connection pool parameters
+	pool.SetMaxOpenConns(config.MaxOpenConns)                                         // max open connections
+	pool.SetMaxIdleConns(config.MaxIdleConns)                                         // max idle connections
+	pool.SetConnMaxLifetime(time.Duration(config.ConnMaxLifetime) * time.Millisecond) // max connection lifetime
+	pool.SetConnMaxIdleTime(time.Duration(config.ConnMaxIdleTime) * time.Millisecond) // max idle time
 
-	// 测试连接
+	// test connection
 	if err := pool.Ping(); err != nil {
 		pool.Close()
 		return nil, ee.New(err, "Error pinging database")

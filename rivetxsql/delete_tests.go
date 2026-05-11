@@ -49,7 +49,7 @@ func TestBatchDeletePerGroup() error {
 	}
 	testDataTruncateTable(rivetxsql)
 
-	// 插入数据
+	// insert data
 	testData := []TestData{
 		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
@@ -71,7 +71,7 @@ func TestBatchDeletePerGroup() error {
 		return ee.New(err, "expected 10 rows, got %d", count)
 	}
 
-	// 构造删除组
+	// build delete group
 	groups := []QueryCond{
 		{ //1
 			FixedCols: []string{"index_col", "key_col"},
@@ -124,7 +124,7 @@ func TestBatchDeletePerGroupStruct() error {
 	}
 	testDataTruncateTable(rivetxsql)
 
-	// 插入数据
+	// insert data
 	testData := []TestData{
 		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
@@ -146,7 +146,7 @@ func TestBatchDeletePerGroupStruct() error {
 		return ee.New(err, "expected 10 rows, got %d", count)
 	}
 
-	// 定义结构体
+	// define struct
 	type Fixed struct {
 		Index int    `db:"index_col"`
 		Key   string `db:"key_col"`
@@ -156,7 +156,7 @@ func TestBatchDeletePerGroupStruct() error {
 		NameIndex int `db:"name_index"`
 	}
 
-	// 构造删除组
+	// build delete group
 	groups := []QueryStruct[Fixed, In]{
 		{ //1
 			Fixed: &Fixed{Index: 0, Key: "abc"},
@@ -205,7 +205,7 @@ func TestBatchDeletePerGroupStruct2() error {
 	}
 	testDataTruncateTable(rivetxsql)
 
-	// 插入数据
+	// insert data
 	testData := []TestData{
 		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
@@ -288,7 +288,7 @@ func TestBatchDeletePerGroupStruct2Point() error {
 	}
 	testDataTruncateTable(rivetxsql)
 
-	// 插入数据
+	// insert data
 	testData := []*TestData{
 		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
@@ -371,7 +371,7 @@ func TestBatchDeletePerGroupStruct2PointLimit() error {
 	}
 	testDataTruncateTable(rivetxsql)
 
-	// 插入数据
+	// insert data
 	testData := []*TestData{
 		{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 		{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
@@ -441,7 +441,7 @@ func TestBatchDeletePerGroupStruct2PointReserve() error {
 		}
 		testDataTruncateTable(rivetxsql)
 
-		// 插入数据
+		// insert data
 		testData := []*TestData{
 			{0, 0, "abc", 1, 1001, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 			{0, 1, "abc", 2, 1002, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
@@ -482,7 +482,7 @@ func TestBatchDeletePerGroupStruct2PointReserve() error {
 		}
 
 		testData = testData[len(testData)-reserveSize : len(testData)]
-		// 验证结果
+		// verify result
 		rows, err := TestDataQueryAllNoId(rivetxsql)
 		if err != nil {
 			return ee.New(err, "")

@@ -981,7 +981,7 @@ func GetTypName(typ int32) string {
 
 func SocketErr(service *ConnService, err error, isRead bool) (bool, error) {
 	if ne, ok := err.(net.Error); ok && ne.Timeout() {
-		// 处理超时错误
+		// handle timeout error
 		if service.TypeClose == TypClose {
 			if isRead {
 				service.TypeClose = TypCloseReadTimeout
@@ -991,7 +991,7 @@ func SocketErr(service *ConnService, err error, isRead bool) (bool, error) {
 		}
 		return true, ee.New(err, "Timeout error isRead:%v", isRead)
 	} else if errors.Is(err, syscall.EPIPE) {
-		// 处理 EPIPE 错误，表示写入一个已经关闭的连接
+		// handle EPIPE error, indicates write to a closed connection
 		//return ee.New(err, "Broken pipe error")
 		if service.TypeClose == TypClose {
 			if isRead {
@@ -1005,7 +1005,7 @@ func SocketErr(service *ConnService, err error, isRead bool) (bool, error) {
 		}
 		return true, nil
 	} else if errors.Is(err, syscall.ECONNRESET) {
-		// 处理连接重置错误
+		// handle connection reset error
 		//return ee.New(err, "Connection reset error")
 		if service.TypeClose == TypClose {
 			if isRead {
@@ -1019,7 +1019,7 @@ func SocketErr(service *ConnService, err error, isRead bool) (bool, error) {
 		}
 		return true, nil
 	} else if err == io.EOF {
-		// EOF 表示对方关闭了连接（通常在读取时出现）
+		// EOF means the peer closed the connection (usually during read)
 		//return ee.New(err, "Connection closed by peer with EOF")
 		if service.TypeClose == TypClose {
 			if isRead {
@@ -1047,7 +1047,7 @@ func SocketErr(service *ConnService, err error, isRead bool) (bool, error) {
 			}
 			return true, nil
 		}
-		// 处理其他类型的错误
+		// handle other error types
 		if service.TypeClose == TypClose {
 			if isRead {
 				service.TypeClose = TypCloseReadErr

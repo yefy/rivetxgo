@@ -38,7 +38,7 @@ func TestInsert() error {
 }
 
 // ----------------------
-// 测试 InsertRaw 手动列+值
+// test InsertRaw with manual columns+values
 // ----------------------
 func TestBatchInsert() error {
 	rivetxsql, err := testOpenRivetxSql()
@@ -77,7 +77,7 @@ func TestBatchInsert() error {
 		return ee.New(err, "expected 10 rows, got %d", count)
 	}
 
-	// 再次插入重复 index_col,key_col，触发 ON DUPLICATE KEY UPDATE
+	// insert duplicate index_col,key_col again to trigger ON DUPLICATE KEY UPDATE
 	valsDup := [][]interface{}{
 		{0, "abc", 11, 11, time.Now().Truncate(time.Second)}, // name_id = 11, name_index += 11
 	}
@@ -98,7 +98,7 @@ func TestBatchInsert() error {
 }
 
 // ----------------------
-// 测试 Insert
+// test Insert
 // ----------------------
 func TestBatchInsertStruct() error {
 	rivetxsql, err := testOpenRivetxSql()
@@ -136,7 +136,7 @@ func TestBatchInsertStruct() error {
 		return ee.New(err, "expected 10 rows, got %d", count)
 	}
 
-	// 测试重复插入结构体触发 ON DUPLICATE KEY UPDATE
+	// test duplicate struct insert triggers ON DUPLICATE KEY UPDATE
 	dataDup := []TestData{
 		{0, 0, "abc", 11, 11, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 11, name_index += 11
 	}
@@ -157,7 +157,7 @@ func TestBatchInsertStruct() error {
 }
 
 // ----------------------
-// 测试 InsertRaw 不带 ON DUPLICATE KEY UPDATE
+// test InsertRaw without ON DUPLICATE KEY UPDATE
 // ----------------------
 func TestBatchInsert_NoDuplicateUpdate() error {
 	rivetxsql, err := testOpenRivetxSql()
@@ -185,7 +185,7 @@ func TestBatchInsert_NoDuplicateUpdate() error {
 		{9, "xyz", 10, 1010, time.Now().Truncate(time.Second)},
 	}
 
-	onDuplicate := "" // 不传 ON DUPLICATE KEY UPDATE
+	onDuplicate := "" // omit ON DUPLICATE KEY UPDATE
 
 	_, err = InsertRaw(rivetxsql, "test_data", cols, vals, 2, onDuplicate, false, 10*time.Second)
 	if err != nil {
@@ -201,7 +201,7 @@ func TestBatchInsert_NoDuplicateUpdate() error {
 }
 
 // ----------------------
-// 测试 Insert 不带 ON DUPLICATE KEY UPDATE
+// test Insert without ON DUPLICATE KEY UPDATE
 // ----------------------
 func TestBatchInsertStruct_NoDuplicateUpdate() error {
 	rivetxsql, err := testOpenRivetxSql()
@@ -228,7 +228,7 @@ func TestBatchInsertStruct_NoDuplicateUpdate() error {
 		{0, 9, "xyz", 10, 1010, time.Now().Truncate(time.Second), time.Time{}, time.Time{}},
 	}
 
-	onDuplicate := "" // 不传 ON DUPLICATE KEY UPDATE
+	onDuplicate := "" // omit ON DUPLICATE KEY UPDATE
 
 	_, err = Insert(rivetxsql, "test_data", testData, 2, onDuplicate, false, 10*time.Second)
 	if err != nil {
@@ -244,7 +244,7 @@ func TestBatchInsertStruct_NoDuplicateUpdate() error {
 }
 
 // ----------------------
-// 测试 NewInsert
+// test NewInsert
 // ----------------------
 func TestBatchNewInsertStruct() error {
 	rivetxsql, err := testOpenRivetxSql()
@@ -289,7 +289,7 @@ func TestBatchNewInsertStruct() error {
 		return ee.New(err, "expected 10 rows, got %d|%d", count, result.TotalAffected)
 	}
 
-	// 验证结果
+	// verify result
 	rows, err := TestDataQueryAllNoId(rivetxsql)
 	if err != nil {
 		return ee.New(err, "")
@@ -305,7 +305,7 @@ func TestBatchNewInsertStruct() error {
 		}
 	}
 
-	// 测试重复插入结构体触发 ON DUPLICATE KEY UPDATE
+	// test duplicate struct insert triggers ON DUPLICATE KEY UPDATE
 	dataDup := []TestData{
 		{0, 0, "abc", 11, 11, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 11, name_index += 11
 	}
@@ -326,7 +326,7 @@ func TestBatchNewInsertStruct() error {
 }
 
 // ----------------------
-// 测试 NewInsert
+// test NewInsert
 // ----------------------
 func TestBatchNewInsertStructPoint() error {
 	rivetxsql, err := testOpenRivetxSql()
@@ -371,7 +371,7 @@ func TestBatchNewInsertStructPoint() error {
 		return ee.New(err, "expected 10 rows, got %d|%d", count, result.TotalAffected)
 	}
 
-	// 验证结果
+	// verify result
 	rows, err := TestDataQueryAllNoId(rivetxsql)
 	if err != nil {
 		return ee.New(err, "")
@@ -390,7 +390,7 @@ func TestBatchNewInsertStructPoint() error {
 		}
 	}
 
-	// 测试重复插入结构体触发 ON DUPLICATE KEY UPDATE
+	// test duplicate struct insert triggers ON DUPLICATE KEY UPDATE
 	dataDup := []TestData{
 		{0, 0, "abc", 11, 11, time.Now().Truncate(time.Second), time.Time{}, time.Time{}}, // name_id = 11, name_index += 11
 	}

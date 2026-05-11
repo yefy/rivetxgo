@@ -22,7 +22,7 @@ func SliceSet[T any](slice []T, index int, value T) bool {
 	return true
 }
 
-// 只有当 T 是 comparable 时，这些函数才能被调用
+// these functions can only be called when T is comparable
 func Contains[T comparable](v *Vector[T], val T) bool {
 	return slices.Contains(v.datas, val)
 }
@@ -133,7 +133,7 @@ func (self *Vector[T]) RemoveRange(startIndex int, endIndex int) bool {
 	return true
 }
 
-// 此方法会改变元素顺序
+// this method may change element order
 func (self *Vector[T]) RemoveFast(index int) bool {
 	if index < 0 || index >= len(self.datas) {
 		return false
