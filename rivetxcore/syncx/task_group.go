@@ -1,7 +1,9 @@
 package syncx
 
-import "sync"
-import "context"
+import (
+	"context"
+	"sync"
+)
 
 func NewTaskGroup() *TaskGroup {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -43,7 +45,7 @@ func (w *TaskGroup) Add(delta int) {
 }
 
 func (w *TaskGroup) Done() {
-	w.WaitGroup.Add(-1)
+	w.WaitGroup.Done()
 }
 
 func (w *TaskGroup) Subscribe() <-chan struct{} {

@@ -101,7 +101,7 @@ func TestUpdateRaw_BatchUpdatesRows(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupUpdateTestTable(t, rivetxsql)
 	defer teardownUpdateTestTable(t, rivetxsql)
@@ -153,7 +153,7 @@ func TestUpdate_WithStructSlice(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupUpdateTestTable(t, rivetxsql)
 	defer teardownUpdateTestTable(t, rivetxsql)
@@ -198,7 +198,7 @@ func TestUpdateBuilder_ExecWithPointerSlice(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupUpdateTestTable(t, rivetxsql)
 	defer teardownUpdateTestTable(t, rivetxsql)

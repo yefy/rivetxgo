@@ -4,15 +4,16 @@
 package limitx
 
 import (
+	"syscall"
+
 	"github.com/yefy/log4go/ee"
 	"github.com/yefy/log4go/log4"
 	"golang.org/x/sys/unix"
-	"syscall"
 )
 
-func SetUlimit(ConfigLimit *ConfigLimit) error {
-	if ConfigLimit == nil {
-		ConfigLimit = &config.ConfigLimit{
+func SetUlimit(configLimit *ConfigLimit) error {
+	if configLimit == nil {
+		configLimit = &ConfigLimit{
 			OpenFileLimitSoft: 512 * 1024,             //524288
 			OpenFileLimitHard: 512 * 1024,             //524288
 			MemlockRlimitCurr: 1 * 1024 * 1024 * 1024, // 1G  1073741824
@@ -21,7 +22,7 @@ func SetUlimit(ConfigLimit *ConfigLimit) error {
 	}
 	log4.Info("Current unix.RLIM_INFINITY:%v", uint64(unix.RLIM_INFINITY))
 
-	if ConfigLimit.OpenFileLimitSoft > 0 && ConfigLimit.OpenFileLimitHard > 0 {
+	if configLimit.OpenFileLimitSoft > 0 && configLimit.OpenFileLimitHard > 0 {
 		var rLimit syscall.Rlimit
 		err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 		if err != nil {
@@ -29,13 +30,13 @@ func SetUlimit(ConfigLimit *ConfigLimit) error {
 		}
 
 		log4.Info("Current Limit:%v", rLimit)
-		if ConfigLimit.OpenFileLimitSoft > rLimit.Cur || ConfigLimit.OpenFileLimitHard > rLimit.Max {
-			OpenFileLimitSoft := ConfigLimit.OpenFileLimitSoft
+		if configLimit.OpenFileLimitSoft > rLimit.Cur || configLimit.OpenFileLimitHard > rLimit.Max {
+			OpenFileLimitSoft := configLimit.OpenFileLimitSoft
 			if OpenFileLimitSoft < rLimit.Cur {
 				OpenFileLimitSoft = rLimit.Cur
 			}
 
-			OpenFileLimitHard := ConfigLimit.OpenFileLimitHard
+			OpenFileLimitHard := configLimit.OpenFileLimitHard
 			if OpenFileLimitHard < rLimit.Max {
 				OpenFileLimitHard = rLimit.Max
 			}
@@ -60,7 +61,7 @@ func SetUlimit(ConfigLimit *ConfigLimit) error {
 		}
 	}
 
-	if ConfigLimit.MemlockRlimitCurr > 0 && ConfigLimit.MemlockRlimitMax > 0 {
+	if configLimit.MemlockRlimitCurr > 0 && configLimit.MemlockRlimitMax > 0 {
 		var rLimit unix.Rlimit
 		err := unix.Getrlimit(unix.RLIMIT_MEMLOCK, &rLimit)
 		if err != nil {
@@ -68,13 +69,13 @@ func SetUlimit(ConfigLimit *ConfigLimit) error {
 		}
 
 		log4.Info("Current RLIMIT_MEMLOCK:%v", rLimit)
-		if ConfigLimit.MemlockRlimitCurr > rLimit.Cur || ConfigLimit.MemlockRlimitMax > rLimit.Max {
-			MemlockRlimitCurr := ConfigLimit.MemlockRlimitCurr
+		if configLimit.MemlockRlimitCurr > rLimit.Cur || configLimit.MemlockRlimitMax > rLimit.Max {
+			MemlockRlimitCurr := configLimit.MemlockRlimitCurr
 			if MemlockRlimitCurr < rLimit.Cur {
 				MemlockRlimitCurr = rLimit.Cur
 			}
 
-			MemlockRlimitMax := ConfigLimit.MemlockRlimitMax
+			MemlockRlimitMax := configLimit.MemlockRlimitMax
 			if MemlockRlimitMax < rLimit.Max {
 				MemlockRlimitMax = rLimit.Max
 			}

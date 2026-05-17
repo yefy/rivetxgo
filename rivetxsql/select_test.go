@@ -61,7 +61,7 @@ func TestSelectRaw_FixedConditionReturnsMatchingRows(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupSelectTestTable(t, rivetxsql)
 	defer teardownSelectTestTable(t, rivetxsql)
@@ -98,7 +98,7 @@ func TestSelect_StructQueryWithInValues(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupSelectTestTable(t, rivetxsql)
 	defer teardownSelectTestTable(t, rivetxsql)
@@ -145,7 +145,7 @@ func TestSelectBuilder_OrderFieldSelect(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupSelectTestTable(t, rivetxsql)
 	defer teardownSelectTestTable(t, rivetxsql)

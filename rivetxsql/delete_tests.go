@@ -117,7 +117,7 @@ func TestBatchDeletePerGroupStruct() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -198,7 +198,7 @@ func TestBatchDeletePerGroupStruct2() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -281,7 +281,7 @@ func TestBatchDeletePerGroupStruct2Point() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -364,7 +364,7 @@ func TestBatchDeletePerGroupStruct2PointLimit() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -433,7 +433,7 @@ func TestBatchDeletePerGroupStruct2PointReserve() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	for i := 0; i < 20; i++ {
 		if err := testDataCreateTable(rivetxsql); err != nil {

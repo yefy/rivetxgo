@@ -2,11 +2,12 @@ package gox
 
 import (
 	"context"
-	"github.com/yefy/log4go/log4"
 	"rivetxgo/rivetxcore/session"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/yefy/log4go/log4"
 )
 
 var uniqMap sync.Map
@@ -26,6 +27,9 @@ func (ch *Chan) Put() {
 }
 
 func NewChan(size int, pool *sync.Pool) *Chan {
+	if size < 0 {
+		size = 0
+	}
 	return &Chan{
 		Ch:   make(chan interface{}, size),
 		pool: pool,
@@ -44,6 +48,9 @@ func init() {
 }
 
 func GetChan(size int) *Chan {
+	if size < 0 {
+		size = 0
+	}
 	if size >= len(chanPools) {
 		return NewChan(size, nil)
 	}
@@ -87,8 +94,8 @@ func Spawn(spawnFunc func(uint64) error) {
 	}()
 }
 
-func SetUniqSpawnCtx(ctx context.Context) {
-	ctx = ctx
+func SetUniqSpawnCtx(c context.Context) {
+	ctx = c
 }
 
 type UniqData struct {
@@ -218,12 +225,18 @@ func (bs *BatchSpawns) Add(data interface{}) {
 
 func (bs *BatchSpawns) Flush() {
 	BatchData := bs.BatchData
-	BatchData.Chan <- BatchDataFlush
+	select {
+	case BatchData.Chan <- BatchDataFlush:
+	case <-time.After(5 * time.Second):
+	}
 }
 
 func (bs *BatchSpawns) Close() {
 	BatchData := bs.BatchData
-	BatchData.Chan <- BatchDataClose
+	select {
+	case BatchData.Chan <- BatchDataClose:
+	case <-time.After(5 * time.Second):
+	}
 }
 
 func (bs *BatchSpawns) Run(waitTime time.Duration, Func func([]interface{}) error) {
@@ -239,17 +252,13 @@ func (bs *BatchSpawns) Run(waitTime time.Duration, Func func([]interface{}) erro
 					return nil
 				}
 				flag = int(flag_)
+			doneLoop:
 				for {
-					isBreak := false
 					select {
 					case flag_ = <-BatchData.Chan: //ok  notify chan
 						flag = int(flag_)
 					default:
-						isBreak = true
-						break
-					}
-					if isBreak {
-						break
+						break doneLoop
 					}
 				}
 			case <-ticker.C:

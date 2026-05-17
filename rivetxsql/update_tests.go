@@ -35,7 +35,7 @@ func TestBatchUpdateStruct() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -101,7 +101,7 @@ func TestBatchUpdateStruct2() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -170,7 +170,7 @@ func TestBatchUpdateStruct2Point() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")

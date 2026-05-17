@@ -3,10 +3,11 @@ package rivetxsql
 import (
 	"context"
 	"fmt"
-	"github.com/yefy/log4go/ee"
-	"github.com/yefy/log4go/log4"
 	"rivetxgo/rivetxcore/utilx"
 	"time"
+
+	"github.com/yefy/log4go/ee"
+	"github.com/yefy/log4go/log4"
 )
 
 func Create[T any](rivetxsql *RivetxSql, tableName string, timeout time.Duration) error {
@@ -45,6 +46,10 @@ func Create[T any](rivetxsql *RivetxSql, tableName string, timeout time.Duration
 		query += fmt.Sprintf(" INDEX %s ( %s ),", key, value)
 	}
 	query = utilx.StringTrim(query)
+	if len(query) <= 0 {
+		return ee.New(nil, "query is empty")
+	}
+
 	if query[len(query)-1] == ',' {
 		query = query[0 : len(query)-1]
 	}

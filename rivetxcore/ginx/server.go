@@ -4,10 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-contrib/pprof"
-	"github.com/gin-gonic/gin"
-	"github.com/yefy/log4go/ee"
-	"github.com/yefy/log4go/log4"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -17,6 +13,11 @@ import (
 	"rivetxgo/rivetxcore/utilx"
 	"runtime/debug"
 	"time"
+
+	"github.com/gin-contrib/pprof"
+	"github.com/gin-gonic/gin"
+	"github.com/yefy/log4go/ee"
+	"github.com/yefy/log4go/log4"
 )
 
 func NewServer(isOpenGinLog bool) *Server {
@@ -80,7 +81,10 @@ func (server *Server) Stop() {
 	if server.httpServer != nil {
 		httpCtx, httpCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer httpCancel()
-		server.httpServer.Shutdown(httpCtx)
+		err := server.httpServer.Shutdown(httpCtx)
+		if err != nil {
+			log4.Error("Error shutting down HTTP server:%v", err)
+		}
 	}
 }
 
@@ -199,5 +203,15 @@ func HttpJsonResp(c *gin.Context, isReadBody bool, doFunc func(req *HttpReqData)
 		}
 	}
 
-	_, _ = c.Writer.Write(jsonData)
+	n, err := c.Writer.Write(jsonData)
+	if err != nil {
+		log4.Error("client connection lost during write, sessionId:%v, expected:%v, bytesWritten:%v, err:%v",
+			sessionId, len(jsonData), n, err)
+		return
+	}
+
+	if n < len(jsonData) {
+		log4.Warn("short write detected, sessionId:%v, expected:%v, actual:%v",
+			sessionId, len(jsonData), n)
+	}
 }

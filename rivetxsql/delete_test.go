@@ -85,7 +85,7 @@ func TestDeleteRaw_FixedInConditionsDeletesRows(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupDeleteTestTable(t, rivetxsql)
 	defer teardownDeleteTestTable(t, rivetxsql)
@@ -128,7 +128,7 @@ func TestDelete_UsingQueryStruct(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupDeleteTestTable(t, rivetxsql)
 	defer teardownDeleteTestTable(t, rivetxsql)
@@ -173,7 +173,7 @@ func TestDeleteBuilder_Limit(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupDeleteTestTable(t, rivetxsql)
 	defer teardownDeleteTestTable(t, rivetxsql)

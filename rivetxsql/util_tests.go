@@ -2,10 +2,11 @@ package rivetxsql
 
 import (
 	"fmt"
-	"github.com/yefy/log4go/ee"
-	"github.com/yefy/log4go/log4"
 	"reflect"
 	"time"
+
+	"github.com/yefy/log4go/ee"
+	"github.com/yefy/log4go/log4"
 )
 
 // TINYTEXT
@@ -60,8 +61,8 @@ type Testkey struct {
 
 func testOpenRivetxSql() (*RivetxSql, error) {
 	config := &Config{
-		Url: "root:Yfygz@389@tcp(192.168.80.139:3306)/test_db?charset=utf8mb4&parseTime=True&loc=Local",
-		//Url:             "root:Yfygz@389@tcp(192.168.192.139:3306)/test_db?charset=utf8mb4&parseTime=True&loc=Local",
+		//Url: "root:Yfygz@389@tcp(192.168.80.139:3306)/test_db?charset=utf8mb4&parseTime=True&loc=Local",
+		Url:             "root:Yfygz@389@tcp(192.168.192.139:3306)/test_db?charset=utf8mb4&parseTime=True&loc=Local",
 		MaxOpenConns:    10,
 		MaxIdleConns:    5,
 		ConnMaxLifetime: 100000,

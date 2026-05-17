@@ -81,7 +81,7 @@ func TestNewTcpConf(t *testing.T) {
 	if conf.SocketWriteChanMsgSize != 1000 {
 		t.Errorf("Expected SocketWriteChanMsgSize 1000, got %d", conf.SocketWriteChanMsgSize)
 	}
-	if !conf.SocketNoDelay {
+	if !*conf.SocketNoDelay {
 		t.Error("Expected SocketNoDelay true")
 	}
 }
@@ -181,6 +181,8 @@ func (m *mockServicer) Write(spawnId uint64, msg *Msg) (bool, error)       { ret
 func (m *mockServicer) WriteErr(spawnId uint64, msg *Msg, err error) error { return nil }
 func (m *mockServicer) Close(spawnId uint64, closeType int32)              {}
 func (m *mockServicer) Self() interface{}                                  { return m }
+func (m *mockServicer) ReadTimeout(isCheckTimeout bool)                    {}
+func (m *mockServicer) WriteTimeout(isCheckTimeout bool)                   {}
 
 func TestConnServiceWithServicer(t *testing.T) {
 	conf := NewTcpConf()
@@ -217,6 +219,7 @@ func TestConnServiceWithServicer(t *testing.T) {
 
 func TestReadBytes(t *testing.T) {
 	conf := NewTcpConf()
+	conf.SocketReadTimeout = 1000
 	config := NewConfig(conf)
 
 	// Create TCP connection
@@ -252,7 +255,7 @@ func TestReadBytes(t *testing.T) {
 	}()
 
 	data := make([]byte, 4)
-	isClose, err := connService.ReadBytes(data, 1000)
+	isClose, err := connService.ReadBytes(data)
 	if err != nil {
 		t.Errorf("ReadBytes failed: %v", err)
 	}
@@ -308,10 +311,11 @@ func TestWriteChan(t *testing.T) {
 
 func TestSocketErr(t *testing.T) {
 	conf := NewTcpConf()
+	conf.SocketReadTimeout = 100
 	config := NewConfig(conf)
 
 	// Create TCP connection
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	listener, err := net.Listen("tcp", "127.0.0.1:12345")
 	if err != nil {
 		t.Fatalf("Failed to create listener: %v", err)
 	}
@@ -335,8 +339,8 @@ func TestSocketErr(t *testing.T) {
 
 	// Try to read from closed connection
 	data := make([]byte, 1)
-	_, err = connService.ReadBytes(data, 100)
-	if err == nil {
+	isClose, err := connService.ReadBytes(data)
+	if !(isClose && err == nil) {
 		t.Error("Expected error when reading from closed connection")
 	}
 }

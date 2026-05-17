@@ -12,7 +12,7 @@ func TestCreate_ExecutesAndIsIdempotent(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		t.Fatalf("setup test_data table failed: %v", err)

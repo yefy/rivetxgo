@@ -14,6 +14,7 @@ func RedirectStderr(path string) (err error) {
 	if err != nil {
 		return
 	}
+	defer logFile.Close()
 	err = syscall.Dup3(int(logFile.Fd()), int(os.Stderr.Fd()), 0)
 	if err != nil {
 		return

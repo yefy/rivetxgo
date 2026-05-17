@@ -4,12 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/yefy/log4go/ee"
-	"github.com/yefy/log4go/log4"
 	"math"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/yefy/log4go/ee"
+	"github.com/yefy/log4go/log4"
 )
 
 func scanRow[T any](rows *sql.Rows, columns []string) (T, error) {
@@ -211,6 +212,9 @@ func SelectRaw[T any](rivetxsql *RivetxSql, table string, join string, queryCond
 					batchCount++
 				}
 				rows.Close()
+				if err := rows.Err(); err != nil {
+					return false, ee.New(err, "rows.Err")
+				}
 
 				totalCount += batchCount
 				if LogRivetxsql().GetLevel() == log4.DEBUG {

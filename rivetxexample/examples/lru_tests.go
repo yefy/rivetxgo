@@ -2,11 +2,16 @@ package examples
 
 import (
 	"fmt"
-	"github.com/hashicorp/golang-lru/v2"
+
+	lru "github.com/hashicorp/golang-lru/v2"
+	"github.com/yefy/log4go/ee"
 )
 
 func LruTests() error {
-	l, _ := lru.New[int, any](3)
+	l, err := lru.New[int, any](3)
+	if err != nil {
+		return ee.New(err, "")
+	}
 	printFunc := func() {
 		keys := l.Keys()
 		fmt.Printf("len:%v\n", l.Len())

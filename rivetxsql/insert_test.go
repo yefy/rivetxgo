@@ -69,7 +69,7 @@ func TestInsertRaw_DuplicateUpdate(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupInsertTestTable(t, rivetxsql)
 	defer testDataDropTable(rivetxsql)
@@ -112,7 +112,7 @@ func TestInsertRaw_IgnoreDuplicate(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupInsertTestTable(t, rivetxsql)
 	defer teardownInsertTestTable(t, rivetxsql)
@@ -139,7 +139,7 @@ func TestInsertStruct_DuplicateUpdate(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupInsertTestTable(t, rivetxsql)
 	defer teardownInsertTestTable(t, rivetxsql)
@@ -181,7 +181,7 @@ func TestInsertBuilder_Exec(t *testing.T) {
 	if err != nil {
 		t.Skipf("skipping test because test DB is unavailable: %v", err)
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	setupInsertTestTable(t, rivetxsql)
 	defer teardownInsertTestTable(t, rivetxsql)

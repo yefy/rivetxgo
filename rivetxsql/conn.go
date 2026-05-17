@@ -2,9 +2,10 @@ package rivetxsql
 
 import (
 	"database/sql"
+	"time"
+
 	"github.com/yefy/log4go/ee"
 	"github.com/yefy/log4go/log4"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -22,10 +23,32 @@ type RivetxSql struct {
 }
 
 func (obj *RivetxSql) Close() {
+	if obj.Pool == nil {
+		return
+	}
 	obj.Pool.Close()
+	obj.Pool = nil
 }
 
 func CreateRivetxSql(config *Config) (*RivetxSql, error) {
+	if config == nil {
+		return nil, ee.New(nil, "config is nil")
+	}
+	if config.Url == "" {
+		return nil, ee.New(nil, "config.Url is empty")
+	}
+	if config.MaxOpenConns <= 0 {
+		config.MaxOpenConns = 10
+	}
+	if config.MaxIdleConns <= 0 {
+		config.MaxIdleConns = 5
+	}
+	if config.ConnMaxLifetime <= 0 {
+		config.ConnMaxLifetime = 100000
+	}
+	if config.ConnMaxIdleTime <= 0 {
+		config.ConnMaxIdleTime = 100000
+	}
 	log4.Info("CreateMysql url:%v", config.Url)
 	dsn := config.Url
 	pool, err := sql.Open("mysql", dsn)

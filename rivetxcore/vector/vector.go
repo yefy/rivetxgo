@@ -24,10 +24,22 @@ func SliceSet[T any](slice []T, index int, value T) bool {
 
 // these functions can only be called when T is comparable
 func Contains[T comparable](v *Vector[T], val T) bool {
+	if v == nil {
+		return false
+	}
+	if v.datas == nil {
+		return false
+	}
 	return slices.Contains(v.datas, val)
 }
 
 func Equal[T comparable](v1, v2 *Vector[T]) bool {
+	if v1 == nil || v2 == nil {
+		return false
+	}
+	if v1.datas == nil || v2.datas == nil {
+		return false
+	}
 	return slices.Equal(v1.datas, v2.datas)
 }
 

@@ -1,14 +1,11 @@
 package tcpx
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/yefy/log4go/ee"
-	"github.com/yefy/log4go/log4"
 	"io"
 	"net"
+	"rivetxgo/rivetxcore/bufiox"
 	"rivetxgo/rivetxcore/gox"
 	"rivetxgo/rivetxcore/session"
 	"runtime/debug"
@@ -18,6 +15,10 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/yefy/log4go/ee"
+	"github.com/yefy/log4go/log4"
 )
 
 var isOpenMsgPool bool
@@ -148,9 +149,12 @@ type Servicer interface {
 	WriteErr(spawnId uint64, msg *Msg, err error) error
 	Close(spawnId uint64, closeType int32)
 	Self() interface{}
+	ReadTimeout(isCheckTimeout bool)
+	WriteTimeout(isCheckTimeout bool)
 }
 
 func NewTcpConf() *TcpConf {
+	SocketNoDelay := true
 	return &TcpConf{
 		SocketWriteChanMsgSize:  1000,
 		SocketWriteFlushTime2:   1,
@@ -159,25 +163,31 @@ func NewTcpConf() *TcpConf {
 		SocketWriteTimeout:      10000,
 		SocketReadBuffer:        1048576,
 		SocketWriteBuffer:       1048576,
-		SocketNoDelay:           true,
-		SocketPrintCloseErr:     true,
+		SocketNoDelay:           &SocketNoDelay,
+		SocketPrintCloseErr:     false,
 		IsUnidirectionalTimeout: false,
 		SocketDelayCloseTimeMs:  2000,
+		ReadBufferCache:         4096,
+		WriteBufferCache:        4096,
+		CheckTimeoutInterval:    500,
 	}
 }
 
 type TcpConf struct {
-	SocketWriteChanMsgSize  int   `yaml:"socket_write_chan_msg_size"`
+	SocketWriteChanMsgSize  int   `yaml:"socket_write_chan_msg_size" default:"1000"`
 	SocketWriteFlushTime2   int64 `yaml:"socket_write_flush_time2" default:"1"`
-	SocketConnectTimeout    int64 `yaml:"socket_connect_timeout"`
-	SocketReadTimeout       int64 `yaml:"socket_read_timeout"`
-	SocketWriteTimeout      int64 `yaml:"socket_write_timeout"`
-	SocketReadBuffer        int   `yaml:"socket_read_buffer"`
-	SocketWriteBuffer       int   `yaml:"socket_write_buffer"`
-	SocketNoDelay           bool  `yaml:"socket_no_delay"`
+	SocketConnectTimeout    int64 `yaml:"socket_connect_timeout" default:"10000"`
+	SocketReadTimeout       int64 `yaml:"socket_read_timeout" default:"10000"`
+	SocketWriteTimeout      int64 `yaml:"socket_write_timeout" default:"10000"`
+	SocketReadBuffer        int   `yaml:"socket_read_buffer" default:"1048576"`
+	SocketWriteBuffer       int   `yaml:"socket_write_buffer" default:"1048576"`
+	SocketNoDelay           *bool `yaml:"socket_no_delay" default:"true"`
 	SocketPrintCloseErr     bool  `yaml:"socket_print_close_err"`
 	IsUnidirectionalTimeout bool  `yaml:"is_unidirectional_timeout"`
 	SocketDelayCloseTimeMs  int64 `yaml:"socket_delay_close_time_ms" default:"2000"`
+	ReadBufferCache         int   `yaml:"read_buffer_cache" default:"4096"`
+	WriteBufferCache        int   `yaml:"write_buffer_cache" default:"4096"`
+	CheckTimeoutInterval    int64 `yaml:"check_timeout_interval" default:"500"`
 }
 
 type Config struct {
@@ -238,11 +248,14 @@ func ListenTcp(addr string, config *Config, callFunc func(*ConnService) Servicer
 	if err != nil {
 		return nil, ee.New(err, "Error starting TCP server addr:%v", addr)
 	}
-	addrs := strings.Split(addr, ":")
-	if len(addrs) != 2 {
-		return nil, ee.New(nil, "len(addrs) != 2")
+
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		listener.Close()
+		return nil, ee.New(err, "Error splitting host port addr:%v", addr)
 	}
-	service.Port = addrs[1]
+
+	service.Port = port
 	service.addr = addr
 	service.listener = listener
 	config.Ctx = service.Ctx
@@ -282,11 +295,10 @@ func ListenTcp(addr string, config *Config, callFunc func(*ConnService) Servicer
 
 func ConnectTcp(isRunReadChan bool, addr string, config *Config, callFunc func(*ConnService) Servicer) error {
 	log4.Trace("ConnectTcp client connected:%v", addr)
-	addrs := strings.Split(addr, ":")
-	if len(addrs) != 2 {
-		return ee.New(nil, "len(addrs) != 2")
+	_, Port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return ee.New(err, "Error splitting host port addr:%v", addr)
 	}
-	Port := addrs[1]
 
 	conn, err := net.DialTimeout("tcp", addr, time.Millisecond*time.Duration(config.TcpConf.SocketConnectTimeout))
 	if err != nil {
@@ -317,8 +329,8 @@ type ConnService struct {
 	Config         *Config
 	SessionId      uint64
 	Conn           net.Conn
-	Reader         *bufio.Reader
-	writer         *bufio.Writer
+	Reader         *bufiox.Reader
+	writer         *bufiox.Writer
 	writeChan      chan *Msg
 	IsQuit         bool
 	Ctx            context.Context
@@ -331,7 +343,6 @@ type ConnService struct {
 	writeMainDone  <-chan struct{}
 	Time           time.Time
 	TypeClose      int32
-	Count          int64
 	readChan       chan *Msg
 	TotalReadByte  int64
 	TotalWriteByte int64
@@ -340,10 +351,15 @@ type ConnService struct {
 func NewConnService(addr string, config *Config, conn net.Conn, isAccept bool, port string) *ConnService {
 	currTime := time.Now()
 	tcpConn := conn.(*net.TCPConn)
-	err := tcpConn.SetNoDelay(config.TcpConf.SocketNoDelay)
-	if err != nil {
-		log4.Error("err:SetNoDelay:%v, err:%v", config.TcpConf.SocketNoDelay, err)
+	if config.TcpConf.SocketNoDelay != nil {
+		if *config.TcpConf.SocketNoDelay {
+			err := tcpConn.SetNoDelay(true)
+			if err != nil {
+				log4.Error("err:SetNoDelay:%v, err:%v", config.TcpConf.SocketNoDelay, err)
+			}
+		}
 	}
+
 	if config.TcpConf.SocketReadBuffer > 0 {
 		err := tcpConn.SetReadBuffer(config.TcpConf.SocketReadBuffer)
 		if err != nil {
@@ -357,8 +373,8 @@ func NewConnService(addr string, config *Config, conn net.Conn, isAccept bool, p
 		}
 	}
 	sessionId := session.SessionId()
-	reader := bufio.NewReaderSize(conn, 1024)
-	writer := bufio.NewWriterSize(conn, 1024)
+	reader := bufiox.NewReaderSize(conn, config.TcpConf.ReadBufferCache)
+	writer := bufiox.NewWriterSize(conn, config.TcpConf.WriteBufferCache)
 	writeChan := make(chan *Msg, config.TcpConf.SocketWriteChanMsgSize)
 	readChan := make(chan *Msg, config.TcpConf.SocketWriteChanMsgSize)
 
@@ -422,6 +438,13 @@ func NewConnService(addr string, config *Config, conn net.Conn, isAccept bool, p
 	return service
 }
 
+func (service *ConnService) IsTimeout() bool {
+	if service.TypeClose == TypCloseReadTimeout || service.TypeClose == TypCloseWriteTimeout {
+		return true
+	}
+	return false
+}
+
 func (service *ConnService) Run(spawnId uint64, isRun bool, isRunReadChan bool) error {
 	gox.StatNumStartAdd("etcp")
 	defer gox.StatNumEndAdd("etcp")
@@ -470,6 +493,19 @@ func (service *ConnService) Run(spawnId uint64, isRun bool, isRunReadChan bool) 
 			return nil
 		})
 
+		service.WaitGroup.Add(1)
+		gox.Spawn(func(u uint64) error {
+			gox.StatNumStartAdd("etcp_checkTimeout")
+			defer gox.StatNumEndAdd("etcp_checkTimeout")
+
+			defer service.WaitGroup.Done()
+			err := service.checkTimeout()
+			if err != nil {
+				return ee.New(err, "RemoteAddr:%v|%v", service.RemoteIp, service.Port)
+			}
+			return nil
+		})
+
 		if isRunReadChan {
 			service.WaitGroup.Add(1)
 			gox.Spawn(func(spawnId uint64) error {
@@ -488,7 +524,7 @@ func (service *ConnService) Run(spawnId uint64, isRun bool, isRunReadChan bool) 
 		if service.servicer != nil {
 			err := service.servicer.Start(spawnId)
 			if err != nil {
-				return ee.New(err, "service.servicer.Init")
+				return ee.New(err, "service.servicer.Start")
 			}
 		}
 
@@ -523,9 +559,13 @@ func (service *ConnService) Run(spawnId uint64, isRun bool, isRunReadChan bool) 
 		}()
 	}
 	service.QuitFunc()
-	if service.Config.TcpConf.SocketDelayCloseTimeMs > 0 {
-		time.Sleep(time.Duration(service.Config.TcpConf.SocketDelayCloseTimeMs) * time.Millisecond)
+
+	sleepTimeMs := service.Config.TcpConf.SocketDelayCloseTimeMs
+	if sleepTimeMs < 1000 {
+		sleepTimeMs = 1000
 	}
+	time.Sleep(time.Duration(sleepTimeMs) * time.Millisecond)
+
 	gox.StatNumEndAdd("etcp_QuitFunc")
 
 	gox.StatNumStartAdd("etcp_Close")
@@ -533,10 +573,120 @@ func (service *ConnService) Run(spawnId uint64, isRun bool, isRunReadChan bool) 
 	gox.StatNumEndAdd("etcp_Close")
 	service.WaitGroup.Wait()
 
+	for msg := range service.writeChan {
+		if msg != nil {
+			msg.Put()
+		}
+	}
+
+	for msg := range service.readChan {
+		if msg != nil {
+			msg.Put()
+		}
+	}
+
 	if err != nil {
 		return ee.New(err, "RemoteAddr:%v|%v", service.RemoteIp, service.Port)
 	}
 	return nil
+}
+
+func (service *ConnService) checkTimeout() error {
+	tcpConf := service.Config.TcpConf
+	totalReadByte := service.TotalReadByte
+	isReadTimeout := false
+	isReadTimeoutTime := time.Now()
+	totalReadByteTime := int64(0)
+
+	totalWriteByte := service.TotalWriteByte
+	isWriteTimeout := false
+	isWriteTimeoutTime := time.Now()
+	totalWriteByteTime := int64(0)
+	if tcpConf.CheckTimeoutInterval < 500 {
+		tcpConf.CheckTimeoutInterval = 500
+	}
+	for {
+		if service.IsQuit {
+			return nil
+		}
+		time.Sleep(time.Millisecond * time.Duration(tcpConf.CheckTimeoutInterval))
+		totalReadByteTime += tcpConf.CheckTimeoutInterval
+		totalWriteByteTime += tcpConf.CheckTimeoutInterval
+
+		if totalReadByte != service.TotalReadByte {
+			totalReadByte = service.TotalReadByte
+			isReadTimeout = false
+			totalReadByteTime = 0
+		} else {
+			if tcpConf.SocketReadTimeout > 0 {
+				if totalReadByteTime >= tcpConf.SocketReadTimeout {
+					isReadTimeout = true
+					isReadTimeoutTime = time.Now()
+					if service.servicer != nil {
+						service.servicer.ReadTimeout(true)
+					}
+				}
+			}
+		}
+
+		if totalWriteByte != service.TotalWriteByte {
+			totalWriteByte = service.TotalWriteByte
+			isWriteTimeout = false
+			totalWriteByteTime = 0
+		} else {
+			if tcpConf.SocketWriteTimeout > 0 {
+				if totalWriteByteTime >= tcpConf.SocketWriteTimeout {
+					isWriteTimeout = true
+					isWriteTimeoutTime = time.Now()
+					if service.servicer != nil {
+						service.servicer.WriteTimeout(true)
+					}
+				}
+			}
+		}
+
+		if tcpConf.IsUnidirectionalTimeout {
+			if isReadTimeout {
+				if service.TypeClose == TypClose {
+					service.TypeClose = TypCloseReadTimeout
+				}
+				if service.servicer != nil {
+					service.servicer.ReadTimeout(true)
+				}
+				service.QuitFunc()
+				return nil
+			} else if isWriteTimeout {
+				if service.TypeClose == TypClose {
+					service.TypeClose = TypCloseWriteTimeout
+				}
+				if service.servicer != nil {
+					service.servicer.WriteTimeout(true)
+				}
+				service.QuitFunc()
+				return nil
+			}
+		} else {
+			if isReadTimeout && isWriteTimeout {
+				if isReadTimeoutTime.UnixMilli() >= isWriteTimeoutTime.UnixMilli() {
+					if service.TypeClose == TypClose {
+						service.TypeClose = TypCloseReadTimeout
+					}
+				} else {
+					if service.TypeClose == TypClose {
+						service.TypeClose = TypCloseWriteTimeout
+					}
+				}
+				if service.servicer != nil {
+					service.servicer.ReadTimeout(true)
+				}
+				if service.servicer != nil {
+					service.servicer.WriteTimeout(true)
+				}
+				service.QuitFunc()
+				return nil
+			}
+		}
+	}
 }
 
 func (service *ConnService) Self() interface{} {
@@ -778,7 +928,7 @@ func (service *ConnService) Write(spawnId uint64) error {
 		}
 		defer service.writer.Flush()
 		socketWriteFlushTime := service.Config.TcpConf.SocketWriteFlushTime2
-		socketWriteTimeout := service.Config.TcpConf.SocketWriteTimeout
+		//socketWriteTimeout := service.Config.TcpConf.SocketWriteTimeout
 
 		flushTimer := time.NewTimer(time.Duration(socketWriteFlushTime) * time.Millisecond)
 		if !flushTimer.Stop() {
@@ -813,17 +963,23 @@ func (service *ConnService) Write(spawnId uint64) error {
 				//if service.IsQuit {
 				//	return true, nil
 				//}
-				if socketWriteTimeout > 0 {
-					service.Conn.SetWriteDeadline(time.Now().Add(time.Duration(socketWriteTimeout) * time.Millisecond))
-				}
-				Count := service.Count
+
 				n, err := service.writer.Write(data[totalWritten:])
+				if n >= 0 {
+					service.TotalWriteByte += int64(n)
+					totalWritten += n
+					if totalWritten >= len(data) {
+						break
+					}
+				}
+
 				if err != nil {
+					service.writer.ResetErr()
 					isClose, err := SocketErr(service, err, false)
-					if service.TypeClose == TypCloseWriteTimeout || service.TypeClose == TypCloseReadTimeout {
-						if Count != service.Count && !service.Config.TcpConf.IsUnidirectionalTimeout {
-							service.TypeClose = TypClose
-							continue
+					if service.TypeClose == TypClose {
+						service.TypeClose = TypCloseWriteTimeout
+						if service.servicer != nil {
+							service.servicer.WriteTimeout(false)
 						}
 					}
 
@@ -841,9 +997,6 @@ func (service *ConnService) Write(spawnId uint64) error {
 					}
 					return isClose, nil
 				}
-				service.Count += 1
-				service.TotalWriteByte += int64(n)
-				totalWritten += n
 			}
 			return false, nil
 		}
@@ -897,7 +1050,7 @@ func (service *ConnService) Write(spawnId uint64) error {
 					}
 				}
 
-				if service.writer.Size() > 0 {
+				if service.writer.Buffered() > 0 {
 					if socketWriteFlushTime > 0 && !service.IsQuit {
 						flushTimer.Reset(time.Duration(socketWriteFlushTime) * time.Millisecond)
 						timeoutChan = flushTimer.C
@@ -907,7 +1060,7 @@ func (service *ConnService) Write(spawnId uint64) error {
 				}
 			case <-timeoutChan:
 				timeoutChan = nil
-				if service.writer.Size() > 0 {
+				if service.writer.Buffered() > 0 {
 					service.writer.Flush()
 				}
 			case <-done:
@@ -921,28 +1074,39 @@ func (service *ConnService) Write(spawnId uint64) error {
 	return err
 }
 
-func (service *ConnService) ReadBytes(data []byte, socketReadTimeout int64) (bool, error) {
+func (service *ConnService) ReadBytes(data []byte) (bool, error) {
+	if len(data) == 0 {
+		return false, ee.New(nil, "len(data) == 0")
+	}
+
 	totalReadSize := 0
 	for {
 		if service.IsQuit {
 			return true, nil
 		}
-		if socketReadTimeout > 0 {
-			service.Conn.SetReadDeadline(time.Now().Add(time.Duration(socketReadTimeout) * time.Millisecond))
-		} else {
-			service.Conn.SetReadDeadline(time.Time{})
-		}
 		n, err := service.Reader.Read(data[totalReadSize:])
+		if n >= 0 {
+			service.TotalReadByte += int64(n)
+			totalReadSize += n
+			if totalReadSize >= len(data) {
+				return false, nil
+			}
+		}
+
 		if err != nil {
+			service.Reader.ResetErr()
 			isClose, err := SocketErr(service, err, true)
+			if service.TypeClose == TypClose {
+				service.TypeClose = TypCloseReadTimeout
+				if service.servicer != nil {
+					service.servicer.ReadTimeout(false)
+				}
+			}
+
 			if err != nil {
 				return isClose, ee.New(err, "connService.Reader.Read")
 			}
 			return isClose, nil
-		}
-		totalReadSize += n
-		if totalReadSize >= len(data) {
-			return false, nil
 		}
 	}
 }
@@ -982,13 +1146,13 @@ func GetTypName(typ int32) string {
 func SocketErr(service *ConnService, err error, isRead bool) (bool, error) {
 	if ne, ok := err.(net.Error); ok && ne.Timeout() {
 		// handle timeout error
-		if service.TypeClose == TypClose {
-			if isRead {
-				service.TypeClose = TypCloseReadTimeout
-			} else {
-				service.TypeClose = TypCloseWriteTimeout
-			}
-		}
+		//if service.TypeClose == TypClose {
+		//	if isRead {
+		//		service.TypeClose = TypCloseReadTimeout
+		//	} else {
+		//		service.TypeClose = TypCloseWriteTimeout
+		//	}
+		//}
 		return true, ee.New(err, "Timeout error isRead:%v", isRead)
 	} else if errors.Is(err, syscall.EPIPE) {
 		// handle EPIPE error, indicates write to a closed connection
@@ -1018,7 +1182,7 @@ func SocketErr(service *ConnService, err error, isRead bool) (bool, error) {
 			return true, ee.New(err, "closed syscall.ECONNRESET isRead:%v", isRead)
 		}
 		return true, nil
-	} else if err == io.EOF {
+	} else if errors.Is(err, io.EOF) {
 		// EOF means the peer closed the connection (usually during read)
 		//return ee.New(err, "Connection closed by peer with EOF")
 		if service.TypeClose == TypClose {
@@ -1055,6 +1219,6 @@ func SocketErr(service *ConnService, err error, isRead bool) (bool, error) {
 				service.TypeClose = TypCloseWriteErr
 			}
 		}
-		return true, ee.New(err, "SocketErr")
+		return true, ee.New(err, "SocketErr GetTypName:%v", GetTypName(service.TypeClose))
 	}
 }

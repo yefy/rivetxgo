@@ -17,7 +17,7 @@ func TestCreateTable() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")

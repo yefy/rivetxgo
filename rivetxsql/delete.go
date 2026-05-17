@@ -3,10 +3,11 @@ package rivetxsql
 import (
 	"context"
 	"fmt"
-	"github.com/yefy/log4go/ee"
-	"github.com/yefy/log4go/log4"
 	"strings"
 	"time"
+
+	"github.com/yefy/log4go/ee"
+	"github.com/yefy/log4go/log4"
 )
 
 // DeleteRaw supports independent batches, chunked IN values per batch, and optional fixed columns
@@ -221,7 +222,8 @@ func (obj *DeleteBuilder) ReserveSize(field string, reserveSize int, reserveSlee
 
 func (obj *DeleteBuilder) execReserveSize(rivetxsql *RivetxSql) (*DeleteResult, error) {
 	var key interface{}
-	rows, err := rivetxsql.Pool.Query(fmt.Sprintf("SELECT %v FROM %v ORDER BY %v DESC LIMIT 1 OFFSET %v", obj.reserveField, obj.table, obj.reserveField, obj.reserveSize))
+	rows, err := rivetxsql.Pool.Query(fmt.Sprintf("SELECT %v FROM %v ORDER BY %v DESC LIMIT 1 OFFSET %v",
+		obj.reserveField, obj.table, obj.reserveField, obj.reserveSize))
 	if err != nil {
 		return nil, ee.New(err, "")
 	}

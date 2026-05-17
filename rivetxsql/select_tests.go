@@ -31,7 +31,7 @@ func TestSelectWithWherePoint() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -281,7 +281,7 @@ func TestSelectWithWhere() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -395,7 +395,7 @@ func TestSelectWithWhereJoin() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")

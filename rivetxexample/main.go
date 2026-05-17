@@ -7,7 +7,7 @@ import (
 	"rivetxgo/rivetxcore/gox"
 	"rivetxgo/rivetxcore/limitx"
 	"rivetxgo/rivetxcore/recoverx"
-	"rivetxgo/rivetxcore/tcpx"
+	"rivetxgo/rivetxcore/tcpx/tcptests"
 	"rivetxgo/rivetxexample/examples"
 	"rivetxgo/rivetxsql"
 	"time"
@@ -70,7 +70,7 @@ func doMain() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	err = tcpx.TcpTests()
+	err = tcptests.TcpTests()
 	if err != nil {
 		return ee.New(err, "")
 	}

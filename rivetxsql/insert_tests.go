@@ -45,7 +45,7 @@ func TestBatchInsert() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -105,7 +105,7 @@ func TestBatchInsertStruct() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -164,7 +164,7 @@ func TestBatchInsert_NoDuplicateUpdate() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -208,7 +208,7 @@ func TestBatchInsertStruct_NoDuplicateUpdate() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -251,7 +251,7 @@ func TestBatchNewInsertStruct() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")
@@ -333,7 +333,7 @@ func TestBatchNewInsertStructPoint() error {
 	if err != nil {
 		return ee.New(err, "")
 	}
-	defer rivetxsql.Pool.Close()
+	defer rivetxsql.Close()
 
 	if err := testDataCreateTable(rivetxsql); err != nil {
 		return ee.New(err, "")

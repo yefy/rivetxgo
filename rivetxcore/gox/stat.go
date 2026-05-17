@@ -1,18 +1,20 @@
 package gox
 
 import (
-	"github.com/shirou/gopsutil/v3/process"
-	"github.com/yefy/log4go/log4"
 	"os"
 	"runtime"
 	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/shirou/gopsutil/v3/process"
+	"github.com/yefy/log4go/log4"
 )
 
 type StatFunc func()
 
+var StatFuncsMutex sync.Mutex
 var StatFuncs = make([]StatFunc, 0, 100)
 
 var StatNum = sync.Map{}
@@ -27,9 +29,13 @@ func init() {
 		for {
 			time.Sleep(time.Duration(10) * time.Second)
 
-			for _, f := range StatFuncs {
-				f()
-			}
+			func() {
+				StatFuncsMutex.Lock()
+				defer StatFuncsMutex.Unlock()
+				for _, f := range StatFuncs {
+					f()
+				}
+			}()
 
 			type Data struct {
 				Key       string
@@ -121,6 +127,8 @@ func monitorPool() {
 }
 
 func StatFuncAdd(f StatFunc) {
+	StatFuncsMutex.Lock()
+	defer StatFuncsMutex.Unlock()
 	StatFuncs = append(StatFuncs, f)
 }
 
