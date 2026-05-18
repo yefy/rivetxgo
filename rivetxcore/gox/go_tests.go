@@ -2,7 +2,7 @@ package gox
 
 import (
 	"fmt"
-	"rivetxgo/rivetxcore/syncx"
+	"github.com/yefy/rivetxgo/rivetxcore/syncx"
 	"time"
 )
 

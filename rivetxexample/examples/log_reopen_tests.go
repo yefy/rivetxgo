@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/yefy/log4go/log4"
-	"rivetxgo/rivetxcore/ginx"
-	"rivetxgo/rivetxcore/gox"
+	"github.com/yefy/rivetxgo/rivetxcore/ginx"
+	"github.com/yefy/rivetxgo/rivetxcore/gox"
 )
 
 func LogReopenTests() {

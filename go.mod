@@ -1,4 +1,4 @@
-module rivetxgo
+module github.com/yefy/rivetxgo
 
 go 1.23.9
 

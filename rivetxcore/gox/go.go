@@ -2,7 +2,7 @@ package gox
 
 import (
 	"context"
-	"rivetxgo/rivetxcore/session"
+	"github.com/yefy/rivetxgo/rivetxcore/session"
 	"strings"
 	"sync"
 	"time"

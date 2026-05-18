@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"rivetxgo/rivetxcore/bufiox"
+	"github.com/yefy/rivetxgo/rivetxcore/bufiox"
 	"strconv"
 	"strings"
 )

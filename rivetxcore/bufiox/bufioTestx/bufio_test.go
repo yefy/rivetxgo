@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	. "rivetxgo/rivetxcore/bufiox"
+	. "github.com/yefy/rivetxgo/rivetxcore/bufiox"
 	"strconv"
 	"strings"
 	"testing"

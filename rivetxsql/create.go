@@ -3,7 +3,7 @@ package rivetxsql
 import (
 	"context"
 	"fmt"
-	"rivetxgo/rivetxcore/utilx"
+	"github.com/yefy/rivetxgo/rivetxcore/utilx"
 	"time"
 
 	"github.com/yefy/log4go/ee"

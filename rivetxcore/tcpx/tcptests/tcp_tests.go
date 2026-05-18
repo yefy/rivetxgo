@@ -2,9 +2,9 @@ package tcptests
 
 import (
 	"github.com/yefy/log4go/ee"
-	"rivetxgo/rivetxcore/tcpx/tcptests1"
-	"rivetxgo/rivetxcore/tcpx/tcptests2"
-	"rivetxgo/rivetxcore/tcpx/tcptests3"
+	"github.com/yefy/rivetxgo/rivetxcore/tcpx/tcptests1"
+	"github.com/yefy/rivetxgo/rivetxcore/tcpx/tcptests2"
+	"github.com/yefy/rivetxgo/rivetxcore/tcpx/tcptests3"
 )
 
 func TcpTests() error {

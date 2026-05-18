@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/yefy/rivetxgo/rivetxcore/gox"
+	"github.com/yefy/rivetxgo/rivetxcore/limitx"
+	"github.com/yefy/rivetxgo/rivetxcore/recoverx"
+	"github.com/yefy/rivetxgo/rivetxcore/tcpx/tcptests"
+	"github.com/yefy/rivetxgo/rivetxexample/examples"
+	"github.com/yefy/rivetxgo/rivetxsql"
 	"math/rand"
 	"os"
-	"rivetxgo/rivetxcore/gox"
-	"rivetxgo/rivetxcore/limitx"
-	"rivetxgo/rivetxcore/recoverx"
-	"rivetxgo/rivetxcore/tcpx/tcptests"
-	"rivetxgo/rivetxexample/examples"
-	"rivetxgo/rivetxsql"
 	"time"
 
 	"github.com/yefy/log4go/ee"

@@ -3,8 +3,8 @@ package rivetxsql
 import (
 	"fmt"
 	"github.com/yefy/log4go/ee"
+	"github.com/yefy/rivetxgo/rivetxcore/utilx"
 	"reflect"
-	"rivetxgo/rivetxcore/utilx"
 	"strconv"
 	"strings"
 	"sync"

@@ -1,13 +1,13 @@
 package tcptests2
 
 import (
+	"github.com/yefy/rivetxgo/rivetxcore/gox"
+	"github.com/yefy/rivetxgo/rivetxcore/log"
+	"github.com/yefy/rivetxgo/rivetxcore/syncx"
+	"github.com/yefy/rivetxgo/rivetxcore/tcpx"
+	"github.com/yefy/rivetxgo/rivetxcore/tcpx/tcptestsbase"
 	"math/rand"
 	"net"
-	"rivetxgo/rivetxcore/gox"
-	"rivetxgo/rivetxcore/log"
-	"rivetxgo/rivetxcore/syncx"
-	"rivetxgo/rivetxcore/tcpx"
-	"rivetxgo/rivetxcore/tcpx/tcptestsbase"
 	"sync/atomic"
 	"time"
 
