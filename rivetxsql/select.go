@@ -1,4 +1,4 @@
-package rivetxsql
+﻿package rivetxsql
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func scanRow[T any](rows *sql.Rows, columns []string) (T, error) {
 	// 3. get metadata (includes column-to-field index mapping)
 	meta, err := getStructMeta(structTyp)
 	if err != nil {
-		return t, err
+		return t, ee.NewErr(err)
 	}
 
 	if len(columns) != len(meta.fieldIndex) {
@@ -62,7 +62,7 @@ func scanRow[T any](rows *sql.Rows, columns []string) (T, error) {
 	}
 
 	err = rows.Scan(dest...)
-	return t, err
+	return t, ee.NewErr(err)
 }
 
 // SelectRaw supports paging, fixed columns, and IN conditions
@@ -400,7 +400,7 @@ func (obj *SelectBuilder[T]) execOrderFieldSelect(rivetxsql *RivetxSql, sort str
 		}
 
 		if err != nil {
-			return nil, err
+			return nil, ee.NewErr(err)
 		}
 
 		if len(values) == 0 {

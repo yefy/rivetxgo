@@ -1,4 +1,4 @@
-package rivetxsql
+﻿package rivetxsql
 
 import (
 	"fmt"
@@ -87,7 +87,7 @@ func testKeyCreateTable(rivetxsql *RivetxSql) error {
 		UNIQUE INDEX u_tk_key (index_col, key_col)
 	);`
 	_, err := rivetxsql.Pool.Exec(query)
-	return err
+	return ee.NewErr(err)
 }
 
 func testKeyClearTable(rivetxsql *RivetxSql) error {
@@ -98,7 +98,7 @@ func testKeyClearTable(rivetxsql *RivetxSql) error {
 	//}
 	//return nil
 	_, err := rivetxsql.Pool.Exec("DELETE FROM test_key")
-	return err
+	return ee.NewErr(err)
 }
 
 // create test table
@@ -115,7 +115,7 @@ func testDataCreateTable(rivetxsql *RivetxSql) error {
         INDEX i_td_name_id (name_id)
 	);`
 	_, err := rivetxsql.Pool.Exec(query)
-	return err
+	return ee.NewErr(err)
 }
 
 func testDataClearTable(rivetxsql *RivetxSql) error {
@@ -309,7 +309,7 @@ func StructFields1(v any) ([]string, error) {
 
 	meta, err := getStructMeta(typ)
 	if err != nil {
-		return nil, err
+		return nil, ee.NewErr(err)
 	}
 
 	return meta.cols, nil
@@ -332,7 +332,7 @@ func StructFields2(v any) ([]string, error) {
 
 	meta, err := getStructMeta(typ)
 	if err != nil {
-		return nil, err
+		return nil, ee.NewErr(err)
 	}
 
 	return meta.cols, nil
@@ -360,7 +360,7 @@ func StructMeta1(v any) (*structMeta, error) {
 
 	meta, err := getStructMeta(typ)
 	if err != nil {
-		return nil, err
+		return nil, ee.NewErr(err)
 	}
 
 	return meta, nil

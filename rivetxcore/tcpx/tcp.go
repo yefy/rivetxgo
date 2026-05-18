@@ -1,4 +1,4 @@
-package tcpx
+﻿package tcpx
 
 import (
 	"context"
@@ -735,7 +735,7 @@ func (service *ConnService) Read(spawnId uint64) error {
 		}
 	}()
 	service.QuitFunc()
-	return err
+	return ee.NewErr(err)
 }
 
 func (service *ConnService) ReadChan(spawnId uint64) error {
@@ -773,7 +773,7 @@ func (service *ConnService) ReadChan(spawnId uint64) error {
 						return service.servicer.ReadChan(spawnId, msg)
 					}()
 					if err != nil {
-						return err
+						return ee.NewErr(err)
 					}
 				} else {
 					log4.Error("service.servicer == nil")
@@ -797,7 +797,7 @@ func (service *ConnService) ReadChan(spawnId uint64) error {
 								return service.servicer.ReadChan(spawnId, msg)
 							}()
 							if err != nil {
-								return err
+								return ee.NewErr(err)
 							}
 						} else {
 							log4.Error("service.servicer == nil")
@@ -819,7 +819,7 @@ func (service *ConnService) ReadChan(spawnId uint64) error {
 		}
 	}()
 	service.QuitFunc()
-	return err
+	return ee.NewErr(err)
 }
 
 func (service *ConnService) TryWriteToReadChan(sessionId uint64, msg *Msg) bool {
@@ -974,7 +974,7 @@ func (service *ConnService) Write(spawnId uint64) error {
 					if service.TypeClose == TypClose {
 						service.TypeClose = TypCloseErr
 					}
-					return true, err
+					return true, ee.NewErr(err)
 				}
 				if isDiscard {
 					return false, nil
@@ -1095,7 +1095,7 @@ func (service *ConnService) Write(spawnId uint64) error {
 		}
 	}()
 	service.QuitFunc()
-	return err
+	return ee.NewErr(err)
 }
 
 func (service *ConnService) ReadBytes(data []byte) (bool, error) {

@@ -1,4 +1,4 @@
-package rivetxsql
+﻿package rivetxsql
 
 import (
 	"fmt"
@@ -202,7 +202,7 @@ func GetCurrentDBName(rivetxsql *RivetxSql) (string, error) {
 	// MySQL uses the DATABASE() function
 	err := rivetxsql.Pool.QueryRow("SELECT DATABASE()").Scan(&dbName)
 	if err != nil {
-		return "", err
+		return "", ee.NewErr(err)
 	}
 	return dbName, nil
 }
@@ -268,7 +268,7 @@ func GetAutoIncrementColumns(rivetxsql *RivetxSql, tableName string) (map[string
 func StructFields[T any]() ([]string, error) {
 	meta, err := StructMeta[T]()
 	if err != nil {
-		return nil, err
+		return nil, ee.NewErr(err)
 	}
 
 	return meta.cols, nil
@@ -287,7 +287,7 @@ func StructMeta[T any]() (*structMeta, error) {
 
 	meta, err := getStructMeta(typ)
 	if err != nil {
-		return nil, err
+		return nil, ee.NewErr(err)
 	}
 
 	return meta, nil
@@ -347,7 +347,7 @@ func StructFieldsAndValues(v any) ([]string, []interface{}, error) {
 
 	meta, err := getStructMeta(typ)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, ee.NewErr(err)
 	}
 
 	values := make([]interface{}, len(meta.fieldIndex))
