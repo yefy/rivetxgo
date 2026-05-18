@@ -156,6 +156,8 @@ github.com/yefy/log4go v0.0.0-20260518071630-7e75776df59a h1:p2g+17uMvcsFXHxOm3y
 github.com/yefy/log4go v0.0.0-20260518071630-7e75776df59a/go.mod h1:sd46o7XfLrTCQg12XFOJO2HPirxqXA/P99isk80lQck=
 github.com/yefy/log4go v0.0.0-20260518123200-8b79e6203a4f h1:Z7FZzIXeL5ffBI3m74UEQMtsSdekkbEfqz2B8KDr6uI=
 github.com/yefy/log4go v0.0.0-20260518123200-8b79e6203a4f/go.mod h1:sd46o7XfLrTCQg12XFOJO2HPirxqXA/P99isk80lQck=
+github.com/yefy/log4go v0.0.0-20260518164347-8bb771802393 h1:gOMtKheK8XaueFeTdHQw4Eez3yAJB4xU4oBOUqnqFGI=
+github.com/yefy/log4go v0.0.0-20260518164347-8bb771802393/go.mod h1:sd46o7XfLrTCQg12XFOJO2HPirxqXA/P99isk80lQck=
 github.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo0=
 github.com/yusufpapurcu/wmi v1.2.4/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
 golang.org/x/arch v0.0.0-20210923205945-b76863e36670/go.mod h1:5om86z9Hs0C8fWVUuoMHwpExlXzs5Tkyp9hOrfG7pp8=
