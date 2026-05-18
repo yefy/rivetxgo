@@ -2,6 +2,8 @@ package gox
 
 import (
 	"context"
+	"github.com/yefy/log4go/ee"
+	"github.com/yefy/rivetxgo/rivetxcore/config"
 	"github.com/yefy/rivetxgo/rivetxcore/session"
 	"strings"
 	"sync"
@@ -85,10 +87,24 @@ func Spawn(spawnFunc func(uint64) error) {
 				NeedFindStr = NeedFindStr[NeedFindStrLen-30 : NeedFindStrLen]
 			}
 
-			if len(NeedFindStr) >= len(IgnoreErr) && strings.Contains(NeedFindStr, IgnoreErr) {
-				log4.Warn("[spawnId:%d] err:%v", spawnId, err)
-			} else {
-				log4.Error("[spawnId:%d] err:%v", spawnId, err)
+			isIgnorePrint := false
+			if e, ok := err.(*ee.Error); ok {
+				isIgnorePrint = e.IgnorePrint()
+			}
+			if !isIgnorePrint {
+				if len(NeedFindStr) >= len(IgnoreErr) && strings.Contains(NeedFindStr, IgnoreErr) {
+					if config.IsOpenStackInfoToErrorLog() {
+						log4.Warn("[spawnId:%d] err:%+#v", spawnId, err)
+					} else {
+						log4.Warn("[spawnId:%d] err:%v", spawnId, err)
+					}
+				} else {
+					if config.IsOpenStackInfoToErrorLog() {
+						log4.Error("[spawnId:%d] err:%+#v", spawnId, err)
+					} else {
+						log4.Error("[spawnId:%d] err:%v", spawnId, err)
+					}
+				}
 			}
 		}
 	}()
@@ -148,7 +164,17 @@ func (us *UniqSpawns) Run() {
 							}
 							err := uniqData.Func()
 							if err != nil {
-								log4.Error("err:%v", err)
+								isIgnorePrint := false
+								if e, ok := err.(*ee.Error); ok {
+									isIgnorePrint = e.IgnorePrint()
+								}
+								if !isIgnorePrint {
+									if config.IsOpenStackInfoToErrorLog() {
+										log4.Error("err:%+#v", err)
+									} else {
+										log4.Error("err:%v", err)
+									}
+								}
 							}
 							if uniqData.WaitChan != nil {
 								uniqData.WaitChan.Ch <- true
@@ -165,7 +191,17 @@ func (us *UniqSpawns) Run() {
 						}
 						err := uniqData.Func()
 						if err != nil {
-							log4.Error("err:%v", err)
+							isIgnorePrint := false
+							if e, ok := err.(*ee.Error); ok {
+								isIgnorePrint = e.IgnorePrint()
+							}
+							if !isIgnorePrint {
+								if config.IsOpenStackInfoToErrorLog() {
+									log4.Error("err:%+#v", err)
+								} else {
+									log4.Error("err:%v", err)
+								}
+							}
 						}
 						if uniqData.WaitChan != nil {
 							uniqData.WaitChan.Ch <- true
@@ -276,7 +312,17 @@ func (bs *BatchSpawns) Run(waitTime time.Duration, Func func([]interface{}) erro
 			}()
 			err := Func(datas)
 			if err != nil {
-				log4.Error("err:%v", err)
+				isIgnorePrint := false
+				if e, ok := err.(*ee.Error); ok {
+					isIgnorePrint = e.IgnorePrint()
+				}
+				if !isIgnorePrint {
+					if config.IsOpenStackInfoToErrorLog() {
+						log4.Error("err:%+#v", err)
+					} else {
+						log4.Error("err:%v", err)
+					}
+				}
 			}
 			if flag == BatchDataClose {
 				return nil
@@ -388,7 +434,17 @@ func (bs *TimerSpawns) Run(isFirstCall bool, waitTime time.Duration, Func func()
 
 			isQuit, err := Func()
 			if err != nil {
-				log4.Error("err:%v", err)
+				isIgnorePrint := false
+				if e, ok := err.(*ee.Error); ok {
+					isIgnorePrint = e.IgnorePrint()
+				}
+				if !isIgnorePrint {
+					if config.IsOpenStackInfoToErrorLog() {
+						log4.Error("err:%+#v", err)
+					} else {
+						log4.Error("err:%v", err)
+					}
+				}
 			}
 			if isQuit {
 				return nil
@@ -451,7 +507,17 @@ func (bs *ListSpawns) Run(Func func(interface{}) error) {
 			}
 			err := Func(data)
 			if err != nil {
-				log4.Error("err:%v", err)
+				isIgnorePrint := false
+				if e, ok := err.(*ee.Error); ok {
+					isIgnorePrint = e.IgnorePrint()
+				}
+				if !isIgnorePrint {
+					if config.IsOpenStackInfoToErrorLog() {
+						log4.Error("err:%+#v", err)
+					} else {
+						log4.Error("err:%v", err)
+					}
+				}
 			}
 			if data == nil {
 				return nil

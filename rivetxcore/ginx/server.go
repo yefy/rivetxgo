@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/yefy/rivetxgo/rivetxcore/config"
 	"github.com/yefy/rivetxgo/rivetxcore/log"
 	"github.com/yefy/rivetxgo/rivetxcore/session"
 	"github.com/yefy/rivetxgo/rivetxcore/utilx"
@@ -128,10 +129,16 @@ func HttpJsonResp(c *gin.Context, isReadBody bool, doFunc func(req *HttpReqData)
 	}
 
 	if err != nil {
+		msg := ""
+		if config.IsOpenStackInfoToErrorLog() {
+			msg = fmt.Sprintf("%+#v", err)
+		} else {
+			msg = fmt.Sprintf("%v", err)
+		}
 		data = map[string]interface{}{
 			"success":   false,
 			"code":      -1,
-			"msg":       fmt.Sprintf("%v", err),
+			"msg":       msg,
 			"elapsed":   elapsed,
 			"sessionId": sessionId,
 		}
