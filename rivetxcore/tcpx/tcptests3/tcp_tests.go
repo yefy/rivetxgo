@@ -36,7 +36,7 @@ func TcpTests() error {
 
 	var connConn *Conn
 	addr = "127.0.0.1:43200"
-	err = tcpx.ConnectTcp(false, addr, TcpConfig, func(connService *tcpx.ConnService) tcpx.Servicer {
+	err = tcpx.ConnectTcpSync(false, addr, TcpConfig, func(connService *tcpx.ConnService) tcpx.Servicer {
 		connConn = NewConn(connService)
 		return connConn
 	})

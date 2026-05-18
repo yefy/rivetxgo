@@ -33,7 +33,7 @@ func TcpTests() error {
 	defer listen.Close()
 
 	addr = "127.0.0.1:43200"
-	err = tcpx.ConnectTcp(false, addr, TcpConfig, func(connService *tcpx.ConnService) tcpx.Servicer {
+	err = tcpx.ConnectTcpSync(false, addr, TcpConfig, func(connService *tcpx.ConnService) tcpx.Servicer {
 		service := NewConn(connService)
 		return service
 	})

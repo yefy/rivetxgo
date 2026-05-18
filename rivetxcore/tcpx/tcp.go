@@ -293,7 +293,16 @@ func ListenTcp(addr string, config *Config, callFunc func(*ConnService) Servicer
 	return service, nil
 }
 
+
+func ConnectTcpSync(isRunReadChan bool, addr string, config *Config, callFunc func(*ConnService) Servicer) error {
+	return DoConnectTcp(false, isRunReadChan, addr, config, callFunc)
+}
+
 func ConnectTcp(isRunReadChan bool, addr string, config *Config, callFunc func(*ConnService) Servicer) error {
+	return DoConnectTcp(true, isRunReadChan, addr, config, callFunc)
+}
+
+func DoConnectTcp(isSpawn bool, isRunReadChan bool, addr string, config *Config, callFunc func(*ConnService) Servicer) error {
 	log4.Trace("ConnectTcp client connected:%v", addr)
 	_, Port, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -308,15 +317,30 @@ func ConnectTcp(isRunReadChan bool, addr string, config *Config, callFunc func(*
 		config.WaitGroup.Add(1)
 	}
 
-	spawnId := uint64(0)
-	if config.WaitGroup != nil {
-		defer config.WaitGroup.Done()
-	}
-	connService := NewConnService(addr, config, conn, false, Port)
-	connService.servicer = callFunc(connService)
-	err = connService.Run(spawnId, connService.servicer != nil, isRunReadChan)
-	if err != nil {
-		return ee.New(err, "connService.Run")
+	if !isSpawn {
+		spawnId := uint64(0)
+		if config.WaitGroup != nil {
+			defer config.WaitGroup.Done()
+		}
+		connService := NewConnService(addr, config, conn, false, Port)
+		connService.servicer = callFunc(connService)
+		err = connService.Run(spawnId, connService.servicer != nil, isRunReadChan)
+		if err != nil {
+			return ee.New(err, "connService.Run")
+		}
+	} else {
+		gox.Spawn(func(spawnId uint64) error {
+			if config.WaitGroup != nil {
+				defer config.WaitGroup.Done()
+			}
+			connService := NewConnService(addr, config, conn, false, Port)
+			connService.servicer = callFunc(connService)
+			err = connService.Run(spawnId, connService.servicer != nil, isRunReadChan)
+			if err != nil {
+				return ee.New(err, "connService.Run")
+			}
+			return nil
+		})
 	}
 	return nil
 }
