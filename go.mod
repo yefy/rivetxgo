@@ -49,7 +49,7 @@ require (
 	github.com/toolkits/file v0.0.0-20160325033739-a5b3c5147e07 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	github.com/yefy/log4go v0.0.0-20260518071630-7e75776df59a // indirect
+	github.com/yefy/log4go v0.0.0-20260518123200-8b79e6203a4f // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	golang.org/x/arch v0.16.0 // indirect
 	golang.org/x/crypto v0.37.0 // indirect
