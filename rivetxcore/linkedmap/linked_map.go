@@ -37,3 +37,7 @@ func (m *LinkedMap) Add(key interface{}, value interface{}) bool {
 	}
 	return false
 }
+
+func (m *LinkedMap) Load(key interface{}) (interface{}, bool) {
+	return m.Map.Load(key)
+}

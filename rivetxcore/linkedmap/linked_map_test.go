@@ -3,6 +3,7 @@ package linkedmap
 import (
 	"sync"
 	"testing"
+	"fmt"
 )
 
 // Test basic Add functionality: adding a new key should succeed and store the value.
@@ -51,6 +52,107 @@ func TestLinkedMapMaxSizeEviction(t *testing.T) {
 	if lm.Keys.Len() > maxSize {
 		t.Fatalf("internal keys list length exceeds maxSize: got %d, max %d", lm.Keys.Len(), maxSize)
 	}
+}
+
+// Test Load for an existing key returns the correct value.
+func TestLinkedMapLoadExisting(t *testing.T) {
+	t.Parallel()
+	lm := NewLinkedMap(0)
+	lm.Add("key1", "value1")
+
+	v, ok := lm.Load("key1")
+	if !ok {
+		t.Fatalf("Load: expected ok=true for existing key, got false")
+	}
+	if v != "value1" {
+		t.Fatalf("Load: expected value1, got %v", v)
+	}
+}
+
+// Test Load for a non-existing key returns nil, false.
+func TestLinkedMapLoadNotFound(t *testing.T) {
+	t.Parallel()
+	lm := NewLinkedMap(0)
+
+	v, ok := lm.Load("nonexistent")
+	if ok {
+		t.Fatalf("Load: expected ok=false for missing key, got true")
+	}
+	if v != nil {
+		t.Fatalf("Load: expected nil value for missing key, got %v", v)
+	}
+}
+
+// Test Load after the key has been evicted due to maxSize.
+func TestLinkedMapLoadAfterEviction(t *testing.T) {
+	t.Parallel()
+	lm := NewLinkedMap(2)
+	lm.Add("k1", "v1")
+	lm.Add("k2", "v2")
+	lm.Add("k3", "v3") // k1 should be evicted
+
+	// evicted key
+	if _, ok := lm.Load("k1"); ok {
+		t.Fatalf("Load: expected evicted key k1 to be missing")
+	}
+	// remaining keys
+	for _, tc := range []struct{ key, want string }{{"k2", "v2"}, {"k3", "v3"}} {
+		v, ok := lm.Load(tc.key)
+		if !ok {
+			t.Fatalf("Load: expected key %s to exist", tc.key)
+		}
+		if v != tc.want {
+			t.Fatalf("Load: key %s: expected %s, got %v", tc.key, tc.want, v)
+		}
+	}
+}
+
+// Test Load with various value types.
+func TestLinkedMapLoadValueTypes(t *testing.T) {
+	t.Parallel()
+	lm := NewLinkedMap(0)
+	lm.Add("int", 42)
+	lm.Add("bool", true)
+	lm.Add("struct", struct{ X int }{X: 7})
+
+	if v, ok := lm.Load("int"); !ok || v != 42 {
+		t.Fatalf("Load: int value mismatch, got %v, ok=%v", v, ok)
+	}
+	if v, ok := lm.Load("bool"); !ok || v != true {
+		t.Fatalf("Load: bool value mismatch, got %v, ok=%v", v, ok)
+	}
+	if v, ok := lm.Load("struct"); !ok || v != (struct{ X int }{X: 7}) {
+		t.Fatalf("Load: struct value mismatch, got %v, ok=%v", v, ok)
+	}
+}
+
+// Test concurrent Load and Add to verify thread-safety of Load.
+func TestLinkedMapConcurrentLoad(t *testing.T) {
+	t.Parallel()
+	const workers = 10
+	lm := NewLinkedMap(0)
+	// Pre-populate keys
+	for i := 0; i < workers; i++ {
+		lm.Add(fmt.Sprintf("key%d", i), i)
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(workers)
+	for i := 0; i < workers; i++ {
+		go func(id int) {
+			defer wg.Done()
+			key := fmt.Sprintf("key%d", id)
+			v, ok := lm.Load(key)
+			if !ok {
+				t.Errorf("Load: concurrent load: key %s not found", key)
+				return
+			}
+			if v != id {
+				t.Errorf("Load: concurrent load: key %s: expected %d, got %v", key, id, v)
+			}
+		}(i)
+	}
+	wg.Wait()
 }
 
 // Test concurrent Add calls to ensure thread‑safety.
