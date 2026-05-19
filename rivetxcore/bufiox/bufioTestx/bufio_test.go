@@ -17,8 +17,6 @@ import (
 	"testing/iotest"
 	"time"
 	"unicode/utf8"
-
-	"github.com/yefy/log4go/ee"
 )
 
 const (
@@ -48,7 +46,7 @@ func (r13 *rot13Reader) Read(p []byte) (int, error) {
 			p[i] -= 13
 		}
 	}
-	return n, ee.NewErr(err)
+	return n, err
 }
 
 // Call ReadByte to accumulate the text of a file
@@ -413,7 +411,7 @@ func TestUnreadByteOthers(t *testing.T) {
 		(*Reader).ReadSlice,
 		func(r *Reader, delim byte) ([]byte, error) {
 			data, err := r.ReadString(delim)
-			return []byte(data), ee.NewErr(err)
+			return []byte(data), err
 		},
 		// ReadLine doesn't fit the data/pattern easily
 		// so we leave it out. It should be covered via
@@ -1436,7 +1434,7 @@ func (w *readFromWriter) ReadFrom(r io.Reader) (int64, error) {
 	b, err := io.ReadAll(r)
 	w.buf = append(w.buf, b...)
 	w.readFromBytes += len(b)
-	return int64(len(b)), ee.NewErr(err)
+	return int64(len(b)), err
 }
 
 // Test that calling (*Writer).ReadFrom with a partially-filled buffer

@@ -13,8 +13,6 @@ import (
 	"io"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/yefy/log4go/ee"
 )
 
 const (
@@ -132,7 +130,7 @@ func (b *Reader) ResetErr() error {
 func (b *Reader) readErr() error {
 	err := b.err
 	b.err = nil
-	return ee.NewErr(err)
+	return err
 }
 
 // Peek returns the next n bytes without advancing the reader. The bytes stop
@@ -168,7 +166,7 @@ func (b *Reader) Peek(n int) ([]byte, error) {
 			err = ErrBufferFull
 		}
 	}
-	return b.buf[b.r : b.r+n], ee.NewErr(err)
+	return b.buf[b.r : b.r+n], err
 }
 
 // Discard skips the next n bytes, returning the number of bytes discarded.
@@ -470,7 +468,7 @@ func (b *Reader) collectFragments(delim byte) (fullBuffers [][]byte, finalFragme
 	}
 
 	totalLen += len(frag)
-	return fullBuffers, frag, totalLen, ee.NewErr(err)
+	return fullBuffers, frag, totalLen, err
 }
 
 // ReadBytes reads until the first occurrence of delim in the input,
@@ -490,7 +488,7 @@ func (b *Reader) ReadBytes(delim byte) ([]byte, error) {
 		n += copy(buf[n:], full[i])
 	}
 	copy(buf[n:], frag)
-	return buf, ee.NewErr(err)
+	return buf, err
 }
 
 // ReadString reads until the first occurrence of delim in the input,
@@ -510,7 +508,7 @@ func (b *Reader) ReadString(delim byte) (string, error) {
 		buf.Write(fb)
 	}
 	buf.Write(frag)
-	return buf.String(), ee.NewErr(err)
+	return buf.String(), err
 }
 
 // WriteTo implements io.WriterTo.
@@ -529,13 +527,13 @@ func (b *Reader) WriteTo(w io.Writer) (n int64, err error) {
 	if r, ok := b.rd.(io.WriterTo); ok {
 		m, err := r.WriteTo(w)
 		n += m
-		return n, ee.NewErr(err)
+		return n, err
 	}
 
 	if w, ok := w.(io.ReaderFrom); ok {
 		m, err := w.ReadFrom(b.rd)
 		n += m
-		return n, ee.NewErr(err)
+		return n, err
 	}
 
 	if b.w-b.r < len(b.buf) {
@@ -547,7 +545,7 @@ func (b *Reader) WriteTo(w io.Writer) (n int64, err error) {
 		m, err := b.writeBuf(w)
 		n += m
 		if err != nil {
-			return n, ee.NewErr(err)
+			return n, err
 		}
 		b.fill() // buffer is empty
 	}
@@ -568,7 +566,7 @@ func (b *Reader) writeBuf(w io.Writer) (int64, error) {
 		panic(errNegativeWrite)
 	}
 	b.r += n
-	return int64(n), ee.NewErr(err)
+	return int64(n), err
 }
 
 // buffered output
@@ -618,7 +616,7 @@ func (b *Writer) ResetErr() error {
 func (b *Writer) readErr() error {
 	err := b.err
 	b.err = nil
-	return ee.NewErr(err)
+	return err
 }
 
 // Size returns the size of the underlying buffer in bytes.
@@ -662,7 +660,7 @@ func (b *Writer) Flush() error {
 		}
 		b.n -= n
 		b.err = err
-		return ee.NewErr(err)
+		return err
 	}
 	b.n = 0
 	return nil
@@ -730,7 +728,7 @@ func (b *Writer) WriteRune(r rune) (size int, err error) {
 	if uint32(r) < utf8.RuneSelf {
 		err = b.WriteByte(byte(r))
 		if err != nil {
-			return 0, ee.NewErr(err)
+			return 0, err
 		}
 		return 1, nil
 	}
@@ -810,7 +808,7 @@ func (b *Writer) ReadFrom(r io.Reader) (n int64, err error) {
 			nn, err := readerFrom.ReadFrom(r)
 			b.err = err
 			n += nn
-			return n, ee.NewErr(err)
+			return n, err
 		}
 		nr := 0
 		for nr < maxConsecutiveEmptyReads {
@@ -837,7 +835,7 @@ func (b *Writer) ReadFrom(r io.Reader) (n int64, err error) {
 			err = nil
 		}
 	}
-	return n, ee.NewErr(err)
+	return n, err
 }
 
 // buffered input and output
