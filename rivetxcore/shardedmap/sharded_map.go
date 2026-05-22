@@ -2,6 +2,7 @@ package shardedmap
 
 import (
 	"sync"
+	"sync/atomic"
 )
 
 func nextPowerOfTwo(n int) int {
@@ -26,6 +27,7 @@ type ShardedMap struct {
 	mask  uint64
 	locks []paddedMutex
 	maps  []map[uint64]struct{}
+	size atomic.Int64
 }
 
 func NewShardedMap(size int) *ShardedMap {
@@ -75,6 +77,7 @@ func (s *ShardedMap) LoadOrStore(key uint64) bool {
 	}
 
 	s.maps[idx][key] = struct{}{}
+	s.size.Add(1)
 	return false
 }
 
@@ -95,6 +98,12 @@ func (s *ShardedMap) LoadAndDelete(key uint64) bool {
 
 	if ok {
 		delete(s.maps[idx], key)
+		s.size.Add(-1)
 	}
 	return ok
+}
+
+
+func (s *ShardedMap) Size() int64 {
+	return s.size.Load()
 }

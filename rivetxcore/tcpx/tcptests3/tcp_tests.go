@@ -3,6 +3,7 @@ package tcptests3
 import (
 	"github.com/yefy/rivetxgo/rivetxcore/gox"
 	"github.com/yefy/rivetxgo/rivetxcore/log"
+	"github.com/yefy/rivetxgo/rivetxcore/msgPool"
 	"github.com/yefy/rivetxgo/rivetxcore/tcpx"
 	"github.com/yefy/rivetxgo/rivetxcore/tcpx/tcptestsbase"
 	"net"
@@ -86,7 +87,7 @@ func (conn *Conn) Start(spawnId uint64) error {
 	return nil
 }
 
-func (conn *Conn) ReadChan(spawnId uint64, msg *tcpx.Msg) error {
+func (conn *Conn) ReadChan(spawnId uint64, msg *msgPool.Msg) error {
 	log4.Error("Conn.ReadChan, ip:%v", conn.ip)
 	return nil
 }
@@ -99,11 +100,11 @@ func (conn *Conn) Read(spawnId uint64) error {
 	}
 }
 
-func (conn *Conn) Write(spawnId uint64, msg *tcpx.Msg) (bool, error) {
+func (conn *Conn) Write(spawnId uint64, msg *msgPool.Msg) (bool, error) {
 	return false, nil
 }
 
-func (conn *Conn) WriteErr(spawnId uint64, msg *tcpx.Msg, err error) error {
+func (conn *Conn) WriteErr(spawnId uint64, msg *msgPool.Msg, err error) error {
 	return ee.New(err, "conn.ip:%v, ConnAddr:%v",
 		conn.ip, conn.connService.ConnAddr)
 }
@@ -155,7 +156,7 @@ func (conn *Conn) Client() error {
 		reqData := tcptestsbase.Int32To4Bytes(req)
 		//log4.Info("client send req:%v", req)
 		for {
-			ok := conn.connService.WriteChan(0, tcpx.NewMsgFromBytes(reqData[:]))
+			ok := conn.connService.WriteChan(0, msgPool.NewMsgFromBytes(reqData[:]))
 			if ok {
 				break
 			}
@@ -183,7 +184,7 @@ func (conn *Conn) Client() error {
 	reqData := tcptestsbase.Int32To4Bytes(req)
 	log4.Info("client send req:%v", req)
 	for {
-		ok := conn.connService.WriteChan(0, tcpx.NewMsgFromBytes(reqData[:]))
+		ok := conn.connService.WriteChan(0, msgPool.NewMsgFromBytes(reqData[:]))
 		if ok {
 			break
 		}

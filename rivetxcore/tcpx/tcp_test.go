@@ -6,18 +6,19 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"github.com/yefy/rivetxgo/rivetxcore/msgPool"
 )
 
 func TestSetMsgPoolFlag(t *testing.T) {
 	// Test setting msg pool flag
-	SetMsgPoolFlag(true)
+	msgPool.SetMsgPoolFlag(true)
 	// No direct way to verify, but should not panic
-	SetMsgPoolFlag(false)
+	msgPool.SetMsgPoolFlag(false)
 }
 
 func TestGetMsg(t *testing.T) {
-	SetMsgPoolFlag(true)
-	msg := GetMsg(100)
+	msgPool.SetMsgPoolFlag(true)
+	msg := msgPool.GetMsg(100)
 	if msg == nil {
 		t.Fatal("GetMsg returned nil")
 	}
@@ -30,8 +31,8 @@ func TestGetMsg(t *testing.T) {
 	msg.Put()
 
 	// Test without pool
-	SetMsgPoolFlag(false)
-	msg2 := GetMsg(200)
+	msgPool.SetMsgPoolFlag(false)
+	msg2 := msgPool.GetMsg(200)
 	if msg2 == nil {
 		t.Fatal("GetMsg without pool returned nil")
 	}
@@ -43,7 +44,7 @@ func TestGetMsg(t *testing.T) {
 
 func TestNewMsgFromBytes(t *testing.T) {
 	data := []byte("test data")
-	msg := NewMsgFromBytes(data)
+	msg := msgPool.NewMsgFromBytes(data)
 	if msg == nil {
 		t.Fatal("NewMsgFromBytes returned nil")
 	}
@@ -60,7 +61,7 @@ func TestNewMsgFromBytes(t *testing.T) {
 }
 
 func TestMsgClone(t *testing.T) {
-	msg := GetMsg(50)
+	msg := msgPool.GetMsg(50)
 	msg.Init(10)
 	cloned := msg.Clone()
 	if cloned.RefCount.Load() != 2 {
@@ -176,9 +177,9 @@ type mockServicer struct{}
 func (m *mockServicer) Init(spawnId uint64) error                          { return nil }
 func (m *mockServicer) Start(spawnId uint64) error                         { return nil }
 func (m *mockServicer) Read(spawnId uint64) error                          { return nil }
-func (m *mockServicer) ReadChan(spawnId uint64, msg *Msg) error            { return nil }
-func (m *mockServicer) Write(spawnId uint64, msg *Msg) (bool, error)       { return false, nil }
-func (m *mockServicer) WriteErr(spawnId uint64, msg *Msg, err error) error { return nil }
+func (m *mockServicer) ReadChan(spawnId uint64, msg *msgPool.Msg) error            { return nil }
+func (m *mockServicer) Write(spawnId uint64, msg *msgPool.Msg) (bool, error)       { return false, nil }
+func (m *mockServicer) WriteErr(spawnId uint64, msg *msgPool.Msg, err error) error { return nil }
 func (m *mockServicer) Close(spawnId uint64, closeType int32)              {}
 func (m *mockServicer) Self() interface{}                                  { return m }
 func (m *mockServicer) ReadTimeout(isCheckTimeout bool)                    {}
@@ -294,7 +295,7 @@ func TestWriteChan(t *testing.T) {
 
 	connService := NewConnService("127.0.0.1:12345", config, clientConn, false, "12345")
 
-	msg := NewMsgFromBytes([]byte("test"))
+	msg := msgPool.NewMsgFromBytes([]byte("test"))
 	success := connService.TryWriteChan(0, msg)
 	if !success {
 		t.Error("TryWriteChan failed")

@@ -2,17 +2,15 @@
 
 import (
 	"context"
-	"fmt"
 	"github.com/yefy/rivetxgo/rivetxcore/bufiox"
 	"github.com/yefy/rivetxgo/rivetxcore/gox"
+	"github.com/yefy/rivetxgo/rivetxcore/msgPool"
 	"github.com/yefy/rivetxgo/rivetxcore/session"
 	"io"
 	"net"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -21,132 +19,14 @@ import (
 	"github.com/yefy/log4go/log4"
 )
 
-var isOpenMsgPool bool
-
-func SetMsgPoolFlag(isOpen bool) {
-	isOpenMsgPool = isOpen
-}
-
-var msgPoolsBlock int = 64
-var msgPools [16384]sync.Pool
-
-func init() {
-	for i := range msgPools {
-		i := i
-		func(i int) {
-			msgPools[i].New = func() interface{} {
-				msg := NewMsg((i+1)*msgPoolsBlock, &msgPools[i])
-				return msg
-			}
-		}(i)
-	}
-}
-
-func GetMsg(size int) *Msg {
-	// 0 1024-1   0
-	// 1024 1024*2-1 1
-	index := (size + msgPoolsBlock - 1) / msgPoolsBlock
-	if !isOpenMsgPool || index >= len(msgPools) {
-		msg := NewMsg((index+1)*msgPoolsBlock, nil)
-		msg.Init(size)
-		return msg
-	} else {
-		for {
-			msg := msgPools[index].Get().(*Msg)
-			if msg.RefCount.Load() > 0 {
-				gox.StatNumEndAdd("etcp_msg_err_Get")
-				log4.Error("log_tcp_msg GetMsg RefCount > 0, Stack:%s", string(debug.Stack()))
-				continue
-			}
-			msg.Init(size)
-			return msg
-		}
-	}
-}
-
-type Msg struct {
-	RefCount atomic.Int32
-	Size     int
-	Cap      int
-	Datas    []byte
-	Pool     *sync.Pool
-}
-
-func NewMsg(cap int, Pool *sync.Pool) *Msg {
-	msg := &Msg{
-		Datas:    make([]byte, cap),
-		Size:     0,
-		Cap:      cap,
-		Pool:     Pool,
-		RefCount: atomic.Int32{},
-	}
-	//msg.RefCount.Add(1)
-	return msg
-}
-
-func NewMsgFromBytes(Data []byte) *Msg {
-	msg := &Msg{
-		Datas:    Data,
-		Size:     len(Data),
-		Cap:      len(Data),
-		Pool:     nil,
-		RefCount: atomic.Int32{},
-	}
-	msg.RefCount.Add(1)
-	return msg
-}
-
-func (msg *Msg) Init(size int) {
-	if size > msg.Cap {
-		gox.StatNumEndAdd("etcp_msg_err_Init")
-		log4.Error("log_tcp_msg size:%v > msg.Cap:%v, Stack:%s", size, msg.Cap, string(debug.Stack()))
-		panic(fmt.Sprintf("log_tcp_msg size:%v > msg.Cap:%v", size, msg.Cap))
-	}
-	msg.Size = size
-	msg.RefCount.Store(1)
-	gox.StatNumStartAdd("etcp_msg")
-}
-
-func (msg *Msg) GetData() []byte {
-	if msg.RefCount.Load() <= 0 {
-		gox.StatNumEndAdd("etcp_msg_err_GetData")
-		log4.Error("log_tcp_msg GetData RefCount <= 0, msg.Cap:%v, Stack:%s", msg.Cap, string(debug.Stack()))
-		//panic(fmt.Sprintf("log_tcp_msg Clone RefCount <= 0"))
-	}
-	return msg.Datas[0:msg.Size]
-}
-
-func (msg *Msg) Clone() *Msg {
-	if msg.RefCount.Load() <= 0 {
-		gox.StatNumEndAdd("etcp_msg_err_Clone")
-		log4.Error("log_tcp_msg Clone RefCount <= 0, msg.Cap:%v, Stack:%s", msg.Cap, string(debug.Stack()))
-		//panic(fmt.Sprintf("log_tcp_msg Clone RefCount <= 0"))
-	}
-	msg.RefCount.Add(1)
-	return msg
-}
-
-func (msg *Msg) Put() {
-	RefCount := msg.RefCount.Add(-1)
-	if RefCount == 0 {
-		gox.StatNumEndAdd("etcp_msg")
-		if msg.Pool != nil {
-			msg.Pool.Put(msg)
-		}
-	} else if RefCount < 0 {
-		gox.StatNumEndAdd("etcp_msg_err_put")
-		log4.Error("log_tcp_msg RefCount < 0, Stack:%s", string(debug.Stack()))
-		//panic(fmt.Sprintf("log_tcp_msg RefCount < 0"))
-	}
-}
 
 type Servicer interface {
 	Init(spawnId uint64) error
 	Start(spawnId uint64) error
 	Read(spawnId uint64) error
-	ReadChan(spawnId uint64, msg *Msg) error
-	Write(spawnId uint64, msg *Msg) (bool, error)
-	WriteErr(spawnId uint64, msg *Msg, err error) error
+	ReadChan(spawnId uint64, msg *msgPool.Msg) error
+	Write(spawnId uint64, msg *msgPool.Msg) (bool, error)
+	WriteErr(spawnId uint64, msg *msgPool.Msg, err error) error
 	Close(spawnId uint64, closeType int32)
 	Self() interface{}
 	ReadTimeout(isCheckTimeout bool)
@@ -355,7 +235,7 @@ type ConnService struct {
 	Conn           net.Conn
 	Reader         *bufiox.Reader
 	writer         *bufiox.Writer
-	writeChan      chan *Msg
+	writeChan      chan *msgPool.Msg
 	IsQuit         bool
 	Ctx            context.Context
 	QuitFunc       func()
@@ -367,7 +247,7 @@ type ConnService struct {
 	writeMainDone  <-chan struct{}
 	Time           time.Time
 	TypeClose      int32
-	readChan       chan *Msg
+	readChan       chan *msgPool.Msg
 	TotalReadByte  int64
 	TotalWriteByte int64
 }
@@ -399,8 +279,8 @@ func NewConnService(addr string, config *Config, conn net.Conn, isAccept bool, p
 	sessionId := session.SessionId()
 	reader := bufiox.NewReaderSize(conn, config.TcpConf.ReadBufferCache)
 	writer := bufiox.NewWriterSize(conn, config.TcpConf.WriteBufferCache)
-	writeChan := make(chan *Msg, config.TcpConf.SocketWriteChanMsgSize)
-	readChan := make(chan *Msg, config.TcpConf.SocketWriteChanMsgSize)
+	writeChan := make(chan *msgPool.Msg, config.TcpConf.SocketWriteChanMsgSize)
+	readChan := make(chan *msgPool.Msg, config.TcpConf.SocketWriteChanMsgSize)
 
 	portInt, _ := strconv.Atoi(port)
 	portN := uint16(portInt)
@@ -822,7 +702,7 @@ func (service *ConnService) ReadChan(spawnId uint64) error {
 	return ee.NewErr(err)
 }
 
-func (service *ConnService) TryWriteToReadChan(sessionId uint64, msg *Msg) bool {
+func (service *ConnService) TryWriteToReadChan(sessionId uint64, msg *msgPool.Msg) bool {
 	if service.IsQuit {
 		return false
 	}
@@ -837,7 +717,7 @@ func (service *ConnService) TryWriteToReadChan(sessionId uint64, msg *Msg) bool 
 	}
 }
 
-func (service *ConnService) WriteToReadChan(sessionId uint64, msg *Msg) bool {
+func (service *ConnService) WriteToReadChan(sessionId uint64, msg *msgPool.Msg) bool {
 	if service.IsQuit {
 		return false
 	}
@@ -871,7 +751,7 @@ func (service *ConnService) WriteToReadChan(sessionId uint64, msg *Msg) bool {
 	return true
 }
 
-func (service *ConnService) TryWriteChanRef(sessionId uint64, msg *Msg) bool {
+func (service *ConnService) TryWriteChanRef(sessionId uint64, msg *msgPool.Msg) bool {
 	writeMsg := msg.Clone()
 	if !service.TryWriteChan(sessionId, writeMsg) {
 		writeMsg.Put()
@@ -880,7 +760,7 @@ func (service *ConnService) TryWriteChanRef(sessionId uint64, msg *Msg) bool {
 	return true
 }
 
-func (service *ConnService) TryWriteChan(sessionId uint64, msg *Msg) bool {
+func (service *ConnService) TryWriteChan(sessionId uint64, msg *msgPool.Msg) bool {
 	if service.IsQuit {
 		return false
 	}
@@ -895,7 +775,7 @@ func (service *ConnService) TryWriteChan(sessionId uint64, msg *Msg) bool {
 	}
 }
 
-func (service *ConnService) WriteChanRef(sessionId uint64, msg *Msg) bool {
+func (service *ConnService) WriteChanRef(sessionId uint64, msg *msgPool.Msg) bool {
 	writeMsg := msg.Clone()
 	if !service.WriteChan(sessionId, writeMsg) {
 		writeMsg.Put()
@@ -904,7 +784,7 @@ func (service *ConnService) WriteChanRef(sessionId uint64, msg *Msg) bool {
 	return true
 }
 
-func (service *ConnService) WriteChan(sessionId uint64, msg *Msg) bool {
+func (service *ConnService) WriteChan(sessionId uint64, msg *msgPool.Msg) bool {
 	if service.IsQuit {
 		return false
 	}
@@ -965,7 +845,7 @@ func (service *ConnService) Write(spawnId uint64) error {
 
 		var timeoutChan <-chan time.Time
 
-		writeFunc := func(msg *Msg) (bool, error) {
+		writeFunc := func(msg *msgPool.Msg) (bool, error) {
 			defer msg.Put()
 
 			if service.servicer != nil {
