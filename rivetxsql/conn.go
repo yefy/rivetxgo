@@ -22,6 +22,10 @@ type RivetxSql struct {
 	Pool *sql.DB
 }
 
+func (obj *RivetxSql) Db() *sql.DB {
+	return obj.Pool
+}
+
 func (obj *RivetxSql) Close() {
 	if obj.Pool == nil {
 		return
