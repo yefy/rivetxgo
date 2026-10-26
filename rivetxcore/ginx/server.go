@@ -8,7 +8,7 @@ import (
 	"github.com/yefy/rivetxgo/rivetxcore/log"
 	"github.com/yefy/rivetxgo/rivetxcore/session"
 	"github.com/yefy/rivetxgo/rivetxcore/utilx"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
@@ -94,32 +94,40 @@ type HttpReqData struct {
 	IsDisableAccessLog bool
 	IsDisablePrintBody bool
 	Body               []byte
+	Status             int
+	Code               int
+	DesMsg             string
+	DataMsg            any
 }
 
-func HttpJsonResp(c *gin.Context, isReadBody bool, doFunc func(req *HttpReqData) (interface{}, error)) {
-	sessionId := session.SessionId()
-	currTime := time.Now()
-	elapsed := int64(0)
-	req := &HttpReqData{C: c}
-	var data map[string]interface{}
-	value, err := func() (ret interface{}, retErr error) {
-		defer func() {
-			endTime := time.Now()
-			elapsed = endTime.UnixMilli() - currTime.UnixMilli()
-		}()
+type HttpJsonOptions struct {
+	MaxBodyBytes int64
+}
 
+// HttpJsonResp keeps the callback return value as the default response data.
+// DataMsg can override it, including when the callback returns an error.
+func HttpJsonResp(c *gin.Context, isReadBody bool, doFunc func(req *HttpReqData) (interface{}, error), options ...HttpJsonOptions) {
+	sessionID := session.SessionId()
+	started := time.Now()
+	req := &HttpReqData{C: c}
+	maxBodyBytes := int64(1 << 20)
+	if len(options) > 0 && options[0].MaxBodyBytes > 0 {
+		maxBodyBytes = options[0].MaxBodyBytes
+	}
+
+	value, callErr := func() (ret interface{}, retErr error) {
 		defer func() {
-			if r := recover(); r != nil {
-				retErr = ee.New(nil, "sessionId:%v, panic:%v, Stack trace:%s \n", sessionId, r, string(debug.Stack()))
+			if recovered := recover(); recovered != nil {
+				retErr = ee.New(nil, "sessionId:%v, panic:%v, Stack trace:%s \n", sessionID, recovered, string(debug.Stack()))
 				ret = nil
 			}
 		}()
 		if isReadBody {
-			Body, err := ioutil.ReadAll(c.Request.Body)
+			body, err := io.ReadAll(http.MaxBytesReader(c.Writer, c.Request.Body, maxBodyBytes))
 			if err != nil {
 				return nil, ee.New(err, "read req_body")
 			}
-			req.Body = Body
+			req.Body = body
 		}
 		return doFunc(req)
 	}()
@@ -127,98 +135,65 @@ func HttpJsonResp(c *gin.Context, isReadBody bool, doFunc func(req *HttpReqData)
 	if req.IsDisablePrintBody {
 		req.Body = nil
 	}
-
-	if err != nil {
-		msg := ""
+	if callErr == nil && req.DataMsg != nil {
+		log4.Error("HttpJsonResp: DataMsg set on successful callback, path=%s", c.Request.URL.Path)
+	}
+	if req.DataMsg != nil {
+		value = req.DataMsg
+	}
+	code := req.Code
+	if callErr != nil && code == 0 {
+		code = -1
+	}
+	description := req.DesMsg
+	if description == "" && callErr != nil {
 		if config.IsOpenStackInfoToErrorLog() {
-			msg = fmt.Sprintf("%+#v", err)
+			description = fmt.Sprintf("%+#v", callErr)
 		} else {
-			msg = fmt.Sprintf("%v", err)
-		}
-		data = map[string]interface{}{
-			"success":   false,
-			"code":      -1,
-			"msg":       msg,
-			"elapsed":   elapsed,
-			"sessionId": sessionId,
-		}
-		log4.Error("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v, outData:%+v",
-			sessionId, currTime.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
-			utilx.SliceByteToString(req.Body), data)
-	} else {
-		data = map[string]interface{}{
-			"success":   true,
-			"code":      0,
-			"msg":       "",
-			"result":    value,
-			"elapsed":   elapsed,
-			"sessionId": sessionId,
-		}
-		if !req.IsDisableAccessLog {
-			if log.LogHttp().GetLevel() == log4.INFO {
-				data := map[string]interface{}{
-					"success":   true,
-					"code":      0,
-					"msg":       "",
-					"elapsed":   elapsed,
-					"sessionId": sessionId,
-				}
-				log.LogHttp().Info("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v, outData:%v",
-					sessionId, currTime.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
-					nil, data)
-			} else if log.LogHttp().GetLevel() < log4.INFO {
-				printData, _ := json.Marshal(data)
-				log.LogHttp().Debug("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v, outData:%+v",
-					sessionId, currTime.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
-					utilx.SliceByteToString(req.Body), utilx.SliceByteToString(printData))
-			}
-		} else {
-			if log.LogHttp().GetLevel() == log4.TRACE {
-				printData, _ := json.Marshal(data)
-				log.LogHttp().Trace("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v, outData:%+v",
-					sessionId, currTime.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
-					utilx.SliceByteToString(req.Body), utilx.SliceByteToString(printData))
-			} else {
-				data := map[string]interface{}{
-					"success":   true,
-					"code":      0,
-					"msg":       "",
-					"elapsed":   elapsed,
-					"sessionId": sessionId,
-				}
-				log.LogHttp().Info("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v, outData:%v",
-					sessionId, currTime.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
-					nil, data)
-			}
+			description = callErr.Error()
 		}
 	}
+	elapsed := time.Since(started).Milliseconds()
+	data := map[string]interface{}{
+		"success":   code >= 0,
+		"code":      code,
+		"des_msg":   description,
+		"data_msg":  value,
+		"elapsed":   elapsed,
+		"sessionId": sessionID,
+	}
+	if code < 0 {
+		log4.Error("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v, outData:%+v",
+			sessionID, started.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
+			utilx.SliceByteToString(req.Body), data)
+	} else if !req.IsDisableAccessLog {
+		if log.LogHttp().GetLevel() < log4.INFO {
+			printData, _ := json.Marshal(data)
+			log.LogHttp().Debug("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v, outData:%+v",
+				sessionID, started.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
+				utilx.SliceByteToString(req.Body), utilx.SliceByteToString(printData))
+		} else {
+			log.LogHttp().Info("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v",
+				sessionID, started.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
+				nil)
+		}
+	}
+
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log4.Error("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v, outData:%+v",
-			sessionId, currTime.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
-			utilx.SliceByteToString(req.Body), data)
-		data = map[string]interface{}{
-			"success":   false,
-			"code":      -1,
-			"msg":       fmt.Sprintf("json.Marshal err:%v", err),
-			"elapsed":   elapsed,
-			"sessionId": sessionId,
-		}
-		jsonData, err = json.Marshal(data)
-		if err != nil {
-			jsonData = []byte(fmt.Sprintf("json.Marshal err:%v", err))
-		}
+		log4.Error("HttpJsonResp: marshal response: %v", err)
+		jsonData, _ = json.Marshal(map[string]interface{}{
+			"success": false, "code": -1, "des_msg": fmt.Sprintf("json.Marshal err:%v", err),
+			"data_msg": nil, "elapsed": elapsed, "sessionId": sessionID,
+		})
 	}
-
-	n, err := c.Writer.Write(jsonData)
-	if err != nil {
-		log4.Error("client connection lost during write, sessionId:%v, expected:%v, bytesWritten:%v, err:%v",
-			sessionId, len(jsonData), n, err)
-		return
+	status := req.Status
+	if status == 0 {
+		status = http.StatusOK
 	}
-
-	if n < len(jsonData) {
-		log4.Warn("short write detected, sessionId:%v, expected:%v, actual:%v",
-			sessionId, len(jsonData), n)
+	c.Header("Content-Type", "application/json; charset=utf-8")
+	c.Status(status)
+	if _, err := c.Writer.Write(jsonData); err != nil {
+		log4.Error("client connection lost during write, sessionId:%v, err:%v", sessionID, err)
 	}
 }
