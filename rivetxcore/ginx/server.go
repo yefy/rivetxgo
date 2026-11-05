@@ -1,6 +1,7 @@
 package ginx
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -102,6 +103,22 @@ type HttpReqData struct {
 
 type HttpJsonOptions struct {
 	MaxBodyBytes int64
+	// FormatLogBody 可选；接收请求体副本，返回仅供日志打印的内容。具体格式和字段规则由调用方决定。
+	FormatLogBody func(body []byte) []byte
+}
+
+// formatLogBody 隔离日志回调与业务输入；日志格式化失败不能改变已经执行的业务及 HTTP 结果。
+func formatLogBody(body []byte, format func([]byte) []byte) (result []byte) {
+	if format == nil {
+		return body
+	}
+	defer func() {
+		if recover() != nil {
+			result = []byte("[request log body formatter failed]")
+			log4.Error("access log request body formatter failed")
+		}
+	}()
+	return format(bytes.Clone(body))
 }
 
 // HttpJsonResp keeps the callback return value as the default response data.
@@ -110,9 +127,13 @@ func HttpJsonResp(c *gin.Context, isReadBody bool, doFunc func(req *HttpReqData)
 	sessionID := session.SessionId()
 	started := time.Now()
 	req := &HttpReqData{C: c}
+	var option HttpJsonOptions
+	if len(options) > 0 {
+		option = options[0]
+	}
 	maxBodyBytes := int64(1 << 20)
-	if len(options) > 0 && options[0].MaxBodyBytes > 0 {
-		maxBodyBytes = options[0].MaxBodyBytes
+	if option.MaxBodyBytes > 0 {
+		maxBodyBytes = option.MaxBodyBytes
 	}
 
 	value, callErr := func() (ret interface{}, retErr error) {
@@ -132,9 +153,6 @@ func HttpJsonResp(c *gin.Context, isReadBody bool, doFunc func(req *HttpReqData)
 		return doFunc(req)
 	}()
 
-	if req.IsDisablePrintBody {
-		req.Body = nil
-	}
 	if callErr == nil && req.DataMsg != nil {
 		log4.Error("HttpJsonResp: DataMsg set on successful callback, path=%s", c.Request.URL.Path)
 	}
@@ -162,16 +180,22 @@ func HttpJsonResp(c *gin.Context, isReadBody bool, doFunc func(req *HttpReqData)
 		"elapsed":   elapsed,
 		"sessionId": sessionID,
 	}
+	// 仅在现有日志规则需要打印请求体时调用格式化回调；成功与错误日志共用同一份日志内容。
+	// 原始 req.Body 始终保留给业务，框架不解析字段、不内置任何业务脱敏规则。
+	var logBody []byte
+	if !req.IsDisablePrintBody && (code < 0 || (!req.IsDisableAccessLog && log.LogHttp().GetLevel() < log4.INFO)) {
+		logBody = formatLogBody(req.Body, option.FormatLogBody)
+	}
 	if code < 0 {
 		log4.Error("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v, outData:%+v",
 			sessionID, started.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
-			utilx.SliceByteToString(req.Body), data)
+			utilx.SliceByteToString(logBody), data)
 	} else if !req.IsDisableAccessLog {
 		if log.LogHttp().GetLevel() < log4.INFO {
 			printData, _ := json.Marshal(data)
 			log.LogHttp().Debug("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v, outData:%+v",
 				sessionID, started.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
-				utilx.SliceByteToString(req.Body), utilx.SliceByteToString(printData))
+				utilx.SliceByteToString(logBody), utilx.SliceByteToString(printData))
 		} else {
 			log.LogHttp().Info("accessLog sessionId:%v, startTime:[%s UTC], elapsed:%v, Method:%v, RemoteIP:%v, url:%v, header:%v, req_body:%v",
 				sessionID, started.UTC().Format("2006-01-02 15:04:05.000"), elapsed, c.Request.Method, c.RemoteIP(), c.Request.URL, c.Request.Header,
