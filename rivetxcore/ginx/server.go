@@ -103,6 +103,8 @@ type HttpReqData struct {
 
 type HttpJsonOptions struct {
 	MaxBodyBytes int64
+	// FormatData 在业务回调和 DataMsg 覆盖之后统一转换响应数据，也处理错误和空结果。
+	FormatData func(value any) any
 	// FormatLogBody 可选；接收请求体副本，返回仅供日志打印的内容。具体格式和字段规则由调用方决定。
 	FormatLogBody func(body []byte) []byte
 }
@@ -159,6 +161,10 @@ func HttpJsonResp(c *gin.Context, isReadBody bool, doFunc func(req *HttpReqData)
 	if req.DataMsg != nil {
 		value = req.DataMsg
 	}
+	// 响应结构由调用方在 HTTP 边界统一；不改变回调使用的业务对象或持久化结构。
+	if option.FormatData != nil {
+		value = option.FormatData(value)
+	}
 	code := req.Code
 	if callErr != nil && code == 0 {
 		code = -1
@@ -206,9 +212,13 @@ func HttpJsonResp(c *gin.Context, isReadBody bool, doFunc func(req *HttpReqData)
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log4.Error("HttpJsonResp: marshal response: %v", err)
+		var emptyData any
+		if option.FormatData != nil {
+			emptyData = option.FormatData(nil)
+		}
 		jsonData, _ = json.Marshal(map[string]interface{}{
 			"success": false, "code": -1, "des_msg": fmt.Sprintf("json.Marshal err:%v", err),
-			"data_msg": nil, "elapsed": elapsed, "sessionId": sessionID,
+			"data_msg": emptyData, "elapsed": elapsed, "sessionId": sessionID,
 		})
 	}
 	status := req.Status
